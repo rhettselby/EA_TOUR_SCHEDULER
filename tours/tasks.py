@@ -10,18 +10,32 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 from dotenv import load_dotenv
 load_dotenv()
 from .models import Tour
 
-USERNAME = os.environ['BOOKED_USERNAME']
-PASSWORD = os.environ['BOOKED_PASSWORD']
+USERNAME = os.environ.get('BOOKED_USERNAME')
+PASSWORD = os.environ.get('BOOKED_PASSWORD')
+
+###Selenium Set-Up for Railway
+
+options = Options()
+options.add_argument("--headless")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+options.binary_location = "/usr/bin/chromium"
+
+
 
 @shared_task
 def TourScraper():
 
     OASA_website = 'https://tours.engineering.ucla.edu/Web/index.php?redirect='
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+    driver = webdriver.Chrome(
+        service = Service("/usr/bin/chromedriver"),
+        options=options,
+    )
     driver.get(OASA_website)
 
 #Sign into OASA Tours Website
