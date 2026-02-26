@@ -1,0 +1,27 @@
+{% extends 'layout.html' %}
+
+{% block title%}
+    Tours View
+{% endblock %}
+
+{% block content %}
+    <section>
+    <bold><h1>Tours List</h1>
+
+    {%for tour in tours%}
+        <article class = "tour">
+            <p>{{ tour.start_dt }}</p>
+            <p>{{ tour.end_dt }}</p>
+            <p>{{ tour.number_of_guests }}</p>
+            <p>{{ tour.event_id }}</p>
+            <p> {{ tour.group_tour }} </p>
+        </article>
+    {% endfor%}
+    </section>
+{% endblock %}
+
+
+
+
+
+

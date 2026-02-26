@@ -1,0 +1,156 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Tours Schedule
+{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap');
+
+    .tours-container {
+        max-width: 900px;
+        margin: 60px auto;
+        padding: 0 24px;
+        font-family: 'DM Mono', monospace;
+    }
+
+    .tours-header {
+        border-bottom: 3px solid #111;
+        padding-bottom: 16px;
+        margin-bottom: 40px;
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+    }
+
+    .tours-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.8rem;
+        margin: 0;
+        color: #111;
+        letter-spacing: -1px;
+    }
+
+    .tours-header .week-label {
+        font-size: 0.75rem;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .tour-card {
+        display: grid;
+        grid-template-columns: 120px 1fr auto;
+        align-items: start;
+        gap: 20px;
+        padding: 24px 0;
+        border-bottom: 1px solid #e5e5e5;
+        transition: background 0.15s;
+    }
+
+    .tour-card:hover {
+        background: #f9f9f9;
+        padding-left: 12px;
+        margin-left: -12px;
+    }
+
+    .tour-time {
+        font-size: 0.8rem;
+        color: #555;
+        line-height: 1.8;
+    }
+
+    .tour-time .start {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #111;
+    }
+
+    .tour-details {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .tour-id {
+        font-size: 0.7rem;
+        color: #aaa;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .tour-guests {
+        font-size: 1rem;
+        color: #111;
+        font-weight: 500;
+    }
+
+    .tour-guests span {
+        color: #888;
+        font-weight: 400;
+        font-size: 0.85rem;
+    }
+
+    .tour-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 2px;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-weight: 500;
+    }
+
+    .badge-group {
+        background: #111;
+        color: #fff;
+    }
+
+    .badge-standard {
+        background: #f0f0f0;
+        color: #555;
+    }
+
+    .no-tours {
+        text-align: center;
+        padding: 80px 0;
+        color: #aaa;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+</style>
+
+<div class="tours-container">
+    <div class="tours-header">
+        <h1>This Week's Tours</h1>
+        <span class="week-label">Schedule</span>
+    </div>
+
+    {% if tours %}
+        {% for tour in tours %}
+        <div class="tour-card">
+            <div class="tour-time">
+                <div class="start">{{ tour.start_dt|date:"g:i A" }}</div>
+                <div>{{ tour.start_dt|date:"D, M j" }}</div>
+                <div>→ {{ tour.end_dt|date:"g:i A" }}</div>
+            </div>
+            <div class="tour-details">
+                <div class="tour-id">{{ tour.event_id }}</div>
+                <div class="tour-guests">{{ tour.number_of_guests }} <span>guests</span></div>
+            </div>
+            <div>
+                {% if tour.group_tour %}
+                    <span class="tour-badge badge-group">Group</span>
+                {% else %}
+                    <span class="tour-badge badge-standard">Standard</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="no-tours">No tours scheduled this week</div>
+    {% endif %}
+</div>
+{% endblock %}

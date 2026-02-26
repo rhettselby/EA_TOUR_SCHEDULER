@@ -1,3 +1,4 @@
+from celery import shared_task
 from datetime import datetime
 from datetime import timezone
 import time
@@ -16,7 +17,7 @@ from .models import Tour
 USERNAME = os.environ['BOOKED_USERNAME']
 PASSWORD = os.environ['BOOKED_PASSWORD']
 
-
+@shared_task
 def TourScraper():
 
     OASA_website = 'https://tours.engineering.ucla.edu/Web/index.php?redirect='
@@ -31,8 +32,8 @@ def TourScraper():
         driver.find_element(By.ID, "password").send_keys(char)
         time.sleep(.05)
 
-    print(driver.find_element(By.NAME, "captcha").get_attribute("value"))
-
+    
+#Click Login, had to use XPath to get it to work
     driver.find_element(By.XPATH, "//button[@type='submit']").click()
 
 
@@ -47,7 +48,6 @@ def TourScraper():
     driver.get(tour_schedule_website)
 
 #wait for schedule to render
-
     WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.CLASS_NAME, "event"))
     )
@@ -77,8 +77,10 @@ def TourScraper():
             start_dt = datetime.fromtimestamp(start_ts, tz=timezone.utc)
             end_dt = datetime.fromtimestamp(end_ts, tz=timezone.utc)
 
+            #Get data-resid to use an unique identifier
             event_id = event.get("data-resid")
 
+            #determine if group tour
             group_tour = 'Group Tour' in event.get_text(strip=True)
 
             if event_id in result:
@@ -101,4 +103,4 @@ def TourScraper():
                 "group_tour":info[3],
             }
         )
-     
+
