@@ -55,6 +55,8 @@ def TourScraper():
     print("PASSWORD exists:", PASSWORD is not None)
     print("After login URL:", driver.current_url)
     print(driver.page_source[:2000])
+    driver.get("https://httpbin.org/ip")
+    print(driver.page_source)
 
 
 #wait ten seconds to ensure next page loads
