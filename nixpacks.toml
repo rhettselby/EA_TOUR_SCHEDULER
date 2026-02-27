@@ -1,2 +1,2 @@
 [phases.setup]
-aptPkgs=["chromium", "chromium-driver"]
+aptPkgs = ["chromium", "chromium-driver"]
