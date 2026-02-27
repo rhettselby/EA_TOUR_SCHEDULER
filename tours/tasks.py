@@ -31,6 +31,12 @@ options.binary_location = "/usr/bin/chromium"
 @shared_task
 def TourScraper():
 
+    import subprocess
+    result = subprocess.run(['which', 'chromium'], capture_output=True, text=True)
+    result2 = subprocess.run(['which', 'chromedriver'], capture_output=True, text=True)
+    print(f"chromium path: {result.stdout}")
+    print(f"chromedriver path: {result2.stdout}")
+
     OASA_website = 'https://tours.engineering.ucla.edu/Web/index.php?redirect='
     driver = webdriver.Chrome(
         service = Service("/usr/bin/chromedriver"),
