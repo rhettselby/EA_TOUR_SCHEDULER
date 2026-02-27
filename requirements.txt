@@ -55,3 +55,4 @@ webdriver-manager==4.0.2
 websocket-client==1.9.0
 wsproto==1.3.2
 zipp==3.23.0
+twilio
