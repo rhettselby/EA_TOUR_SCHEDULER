@@ -36,7 +36,6 @@ def TourScraper():
     )
     driver.get(OASA_website)
 
-    # Sign into OASA Tours Website
     for char in USERNAME:
         driver.find_element(By.ID, "email").send_keys(char)
         time.sleep(.05)
@@ -44,28 +43,27 @@ def TourScraper():
         driver.find_element(By.ID, "password").send_keys(char)
         time.sleep(.05)
 
-    # Submit captcha value and click login
-    captcha_value = driver.find_element(By.NAME, "captcha").get_attribute("value")
-    print("captcha value:", captcha_value)
     button = driver.find_element(By.XPATH, "//button[@type='submit']")
     driver.execute_script("arguments[0].click();", button)
 
-    # Wait for next page to load
     print("waiting to sign in")
-    WebDriverWait(driver, 30).until(
-        EC.presence_of_element_located((By.ID, "announcements-dashboard"))
-    )
+    try:
+        WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.ID, "announcements-dashboard"))
+        )
+    except:
+        print("TIMEOUT - current URL:", driver.current_url)
+        print("PAGE SOURCE:", driver.page_source[:1000])
+        driver.quit()
+        return
 
-    # Navigate to tours schedule
     tour_schedule_website = 'https://tours.engineering.ucla.edu/Web/schedule.php?&sfw=1'
     driver.get(tour_schedule_website)
 
-    # Wait for schedule to render
     WebDriverWait(driver, 30).until(
         EC.presence_of_element_located((By.CLASS_NAME, "event"))
     )
 
-    # Grab html from website
     current_week_html = driver.page_source
     print("loaded html")
     driver.quit()
