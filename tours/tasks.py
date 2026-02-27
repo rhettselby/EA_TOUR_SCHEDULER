@@ -21,9 +21,10 @@ PASSWORD = os.environ.get('BOOKED_PASSWORD')
 ###Selenium Set-Up for Railway
 
 options = Options()
-options.add_argument("--headless")
+options.add_argument("--headless=new")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
+options.add_argument("--window-size=1920,1080")
 
 
 
@@ -49,6 +50,9 @@ def TourScraper():
     
 #Click Login, had to use XPath to get it to work
     driver.find_element(By.XPATH, "//button[@type='submit']").click()
+    ##DEBUG
+    print("USERNAME:", USERNAME)
+    print("PASSWORD exists:", PASSWORD is not None)
 
 
 #wait ten seconds to ensure next page loads
