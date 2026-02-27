@@ -21,10 +21,12 @@ PASSWORD = os.environ.get('BOOKED_PASSWORD')
 ###Selenium Set-Up for Railway
 
 options = Options()
-options.add_argument("--headless=new")
+options.add_argument("--headless")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
-options.add_argument("--window-size=1920,1080")
+options.add_argument("--disable-blink-features=AutomationControlled")
+options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36")
+options.binary_location = "/usr/bin/google-chrome"
 
 
 
@@ -32,11 +34,11 @@ options.add_argument("--window-size=1920,1080")
 def TourScraper():
 
     OASA_website = 'https://tours.engineering.ucla.edu/Web/index.php?redirect='
-    options.binary_location = "/usr/bin/google-chrome"
     driver = webdriver.Chrome(
         service=Service(ChromeDriverManager().install()),
         options=options
     )
+    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
     driver.get(OASA_website)
 
 #Sign into OASA Tours Website
