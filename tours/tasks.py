@@ -1,3 +1,4 @@
+from zoneinfo import ZoneInfo
 from celery import shared_task
 from datetime import datetime
 from datetime import timezone
@@ -18,6 +19,37 @@ from .models import Tour
 USERNAME = os.environ.get('BOOKED_USERNAME')
 PASSWORD = os.environ.get('BOOKED_PASSWORD')
 
+
+
+from twilio.rest import Client
+
+
+####Automatic Texts sent by Twilio #####
+
+DOT_NUMBERS = ['+18052456513', '+16196369384']
+
+def send_text(start_dt, group_tour):
+
+    account_sid = os.environ["TWILIO_ACCOUNT_SID"]
+    auth_token  = os.environ["TWILIO_AUTH_TOKEN"]
+
+    pst_dt = start_dt.astimezone(ZoneInfo("America/Los_Angeles"))
+    time_str = pst_dt.strftime('%a %b %d at %I:%M %p %Z')
+
+   
+    client = Client(account_sid, auth_token)
+
+    for number in DOT_NUMBERS:
+        message = client.messages.create(
+         body=f"New group tour added to schedule at {time_str}" if group_tour else \
+                f"New tour added to schedule at {time_str}",
+            from_="+18773301601", 
+            to=number
+        )
+        print(message.sid)
+
+
+####Webscraper Function
 
 @shared_task
 def TourScraper():
@@ -101,3 +133,6 @@ def TourScraper():
                 "group_tour": info[3],
             }
         )
+        if created:
+            send_text(info[0], info[3])
+
