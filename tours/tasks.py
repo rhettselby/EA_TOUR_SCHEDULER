@@ -26,7 +26,7 @@ from twilio.rest import Client
 
 ####Automatic Texts sent by Twilio #####
 
-DOT_NUMBERS = ['+18052456513', '+16196369384']
+DOT_NUMBERS = ['+18052456513', '+16196369384', '16106205106']
 
 def send_text(start_dt, group_tour):
 
