@@ -53,6 +53,8 @@ def TourScraper():
     ##DEBUG
     print("USERNAME:", USERNAME)
     print("PASSWORD exists:", PASSWORD is not None)
+    print("After login URL:", driver.current_url)
+    print(driver.page_source[:2000])
 
 
 #wait ten seconds to ensure next page loads
