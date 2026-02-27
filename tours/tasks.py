@@ -53,7 +53,7 @@ def TourScraper():
 
 #wait ten seconds to ensure next page loads
     print("waiting to sign in")
-    WebDriverWait(driver, 10).until(
+    WebDriverWait(driver, 60).until(
         EC.presence_of_element_located((By.ID, "announcements-dashboard"))
     )
 
