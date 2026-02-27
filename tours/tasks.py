@@ -24,23 +24,17 @@ options = Options()
 options.add_argument("--headless")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
-options.binary_location = "/usr/bin/chromium"
 
 
 
 @shared_task
 def TourScraper():
 
-    import subprocess
-    result = subprocess.run(['which', 'chromium'], capture_output=True, text=True)
-    result2 = subprocess.run(['which', 'chromedriver'], capture_output=True, text=True)
-    print(f"chromium path: {result.stdout}")
-    print(f"chromedriver path: {result2.stdout}")
-
     OASA_website = 'https://tours.engineering.ucla.edu/Web/index.php?redirect='
+    options.binary_location = "/usr/bin/google-chrome"
     driver = webdriver.Chrome(
-        service = Service("/usr/bin/chromedriver"),
-        options=options,
+        service=Service(ChromeDriverManager().install()),
+        options=options
     )
     driver.get(OASA_website)
 
