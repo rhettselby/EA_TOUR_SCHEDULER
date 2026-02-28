@@ -26,7 +26,7 @@ from twilio.rest import Client
 
 ####Automatic Texts sent by Twilio #####
 
-DOT_NUMBERS = ['+18052456513', '+16196369384', '16106205106']
+DOT_NUMBERS = ['+18052456513', '+16196369384', '+16106205106']
 
 def send_text(start_dt, group_tour):
 
@@ -53,52 +53,53 @@ def send_text(start_dt, group_tour):
 
 @shared_task
 def TourScraper():
-
-    OASA_website = 'https://tours.engineering.ucla.edu/Web/index.php?redirect='
-
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.binary_location = "/usr/bin/google-chrome"
-
-    driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()),
-        options=options
-    )
-    driver.get(OASA_website)
-
-    for char in USERNAME:
-        driver.find_element(By.ID, "email").send_keys(char)
-        time.sleep(.05)
-    for char in PASSWORD:
-        driver.find_element(By.ID, "password").send_keys(char)
-        time.sleep(.05)
-
-    button = driver.find_element(By.XPATH, "//button[@type='submit']")
-    driver.execute_script("arguments[0].click();", button)
-
-    print("waiting to sign in")
     try:
-        WebDriverWait(driver, 30).until(
-            EC.presence_of_element_located((By.ID, "announcements-dashboard"))
+        OASA_website = 'https://tours.engineering.ucla.edu/Web/index.php?redirect='
+
+        options = Options()
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.binary_location = "/usr/bin/google-chrome"
+
+        driver = webdriver.Chrome(
+            service=Service(ChromeDriverManager().install()),
+            options=options
         )
-    except:
-        print("TIMEOUT - current URL:", driver.current_url)
-        print("PAGE SOURCE:", driver.page_source[:1000])
+        driver.get(OASA_website)
+
+        for char in USERNAME:
+            driver.find_element(By.ID, "email").send_keys(char)
+            time.sleep(.05)
+        for char in PASSWORD:
+            driver.find_element(By.ID, "password").send_keys(char)
+            time.sleep(.05)
+
+        button = driver.find_element(By.XPATH, "//button[@type='submit']")
+        driver.execute_script("arguments[0].click();", button)
+
+        print("waiting to sign in")
+        try:
+            WebDriverWait(driver, 30).until(
+                EC.presence_of_element_located((By.ID, "announcements-dashboard"))
+            )
+        except:
+            print("TIMEOUT - current URL:", driver.current_url)
+            print("PAGE SOURCE:", driver.page_source[:1000])
+            return
+
+        tour_schedule_website = 'https://tours.engineering.ucla.edu/Web/schedule.php?&sfw=1'
+        driver.get(tour_schedule_website)
+
+        WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "event"))
+        )
+
+        current_week_html = driver.page_source
+        print("loaded html")
+    #ensure driver always quits
+    finally:
         driver.quit()
-        return
-
-    tour_schedule_website = 'https://tours.engineering.ucla.edu/Web/schedule.php?&sfw=1'
-    driver.get(tour_schedule_website)
-
-    WebDriverWait(driver, 30).until(
-        EC.presence_of_element_located((By.CLASS_NAME, "event"))
-    )
-
-    current_week_html = driver.page_source
-    print("loaded html")
-    driver.quit()
 
     soup = BeautifulSoup(current_week_html, 'lxml')
     tours = [e for e in soup.find_all('div', class_="reserved") if 'past' not in e.get('class', [])]
