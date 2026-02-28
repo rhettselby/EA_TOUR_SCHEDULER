@@ -139,7 +139,7 @@ CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://localhost:6379")
 CELERY_BEAT_SCHEDULE = {
     'get-tours-every-hour': {
         'task':'tours.tasks.TourScraper',
-        'schedule': crontab(minute=0),
+        'schedule': crontab(minute=0, hour='8-22/2'),
     }
 }
 
