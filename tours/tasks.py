@@ -135,6 +135,6 @@ def TourScraper():
             }
         )
         if created:
-            send_text(info[0], info[3])
+            #send_text(info[0], info[3])
             update_sheet(info[0], info[3])
 
