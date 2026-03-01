@@ -23,7 +23,7 @@ def update_sheet(tour_start_dt, is_group_tour):
         "https://www.googleapis.com/auth/spreadsheets"
     ]
 
-    creds_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+    creds_json = os.environ.get("GSHEETS_CREDENTIALS_JSON")
     creds_dict = json.loads(creds_json)
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
 
