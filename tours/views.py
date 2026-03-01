@@ -14,7 +14,7 @@ def view_tours(request):
 
     pst = pytz.timezone('America/Los_Angeles')
 
-    #Create two week zone
+    #Create two week zone starting at beginning of current week
     today = timezone.now().astimezone(pst)
     start_of_week = today - timedelta(days=today.weekday())
     end_of_week = start_of_week + timedelta(days=14)

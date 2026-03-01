@@ -15,7 +15,7 @@ from selenium.webdriver.chrome.options import Options
 from dotenv import load_dotenv
 load_dotenv()
 from .models import Tour
-
+from gsheets.services import update_sheet
 USERNAME = os.environ.get('BOOKED_USERNAME')
 PASSWORD = os.environ.get('BOOKED_PASSWORD')
 
@@ -136,4 +136,5 @@ def TourScraper():
         )
         if created:
             send_text(info[0], info[3])
+            update_sheet(info[0], info[3])
 
