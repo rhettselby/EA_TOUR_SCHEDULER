@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 from datetime import timedelta
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+import json
 
 
 
@@ -23,7 +23,9 @@ def update_sheet(tour_start_dt, is_group_tour):
         "https://www.googleapis.com/auth/spreadsheets"
     ]
 
-    creds = Credentials.from_service_account_file(os.path.join(BASE_DIR, "credentials.json"), scopes=scopes)
+    creds_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+    creds_dict = json.loads(creds_json)
+    creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
 
     client = gspread.authorize(creds)
 
