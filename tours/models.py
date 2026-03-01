@@ -8,6 +8,7 @@ class Tour(models.Model):
     end_dt = models.DateTimeField()
     number_of_guests = models.PositiveIntegerField()
     group_tour = models.BooleanField(default=False)
+    guest_name = models.CharField()
 
 
     def __str__(self):
