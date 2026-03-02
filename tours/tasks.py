@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -54,6 +54,7 @@ def send_text(start_dt, group_tour):
 @shared_task
 def TourScraper():
     try:
+        #Login Page
         OASA_website = 'https://tours.engineering.ucla.edu/Web/index.php?redirect='
 
         options = Options()
@@ -78,6 +79,8 @@ def TourScraper():
         button = driver.find_element(By.XPATH, "//button[@type='submit']")
         driver.execute_script("arguments[0].click();", button)
 
+
+
         print("waiting to sign in")
         try:
             WebDriverWait(driver, 30).until(
@@ -88,15 +91,31 @@ def TourScraper():
             print("PAGE SOURCE:", driver.page_source[:1000])
             return
 
+        #Schedule Page
         tour_schedule_website = 'https://tours.engineering.ucla.edu/Web/schedule.php?&sfw=1'
         driver.get(tour_schedule_website)
 
-        WebDriverWait(driver, 30).until(
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "event"))
+        )
+
+        #Select 10-day period view
+
+        button = driver.find_element(By.ID, "change-visible-days-btn")
+        driver.execute_script("arguments[0].click();", button)
+
+        #select "10" from dropdown
+        select_element = driver.find_element(By.ID, "visible-days-select")
+        select = Select(select_element)
+        select.select_by_value("10")
+        
+        WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CLASS_NAME, "event"))
         )
 
         current_week_html = driver.page_source
         print("loaded html")
+
     #ensure driver always quits
     finally:
         driver.quit()
