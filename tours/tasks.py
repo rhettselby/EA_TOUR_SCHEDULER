@@ -101,8 +101,8 @@ def TourScraper():
 
         #Select 10-day period view
 
-        button = driver.find_element(By.ID, "change-visible-days-btn")
-        driver.execute_script("arguments[0].click();", button)
+        #button = driver.find_element(By.ID, "change-visible-days-btn")
+        #driver.execute_script("arguments[0].click();", button)
 
         #select "10" from dropdown
         select_element = driver.find_element(By.ID, "visible-days-select")
