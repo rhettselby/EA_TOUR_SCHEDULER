@@ -121,7 +121,7 @@ def TourScraper():
             if event_id in result:
                 result[event_id][2] += 1
             else:
-                result[event_id] = [start_dt, end_dt, 1, group_tour, group_name]
+                result[event_id] = [start_dt, end_dt, 1, group_tour, guest_name]
 
     for event_id, info in result.items():
         if info[3]:
