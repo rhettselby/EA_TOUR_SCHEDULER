@@ -108,6 +108,14 @@ def TourScraper():
         select_element = driver.find_element(By.ID, "visible-days-select")
         select = Select(select_element)
         select.select_by_value("10")
+
+        #this is next test to be commited and tried
+        driver.execute_script(
+            """
+            arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
+            arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
+            """, 
+            select_element)
         time.sleep(2)
         
         WebDriverWait(driver, 10).until(
