@@ -105,9 +105,9 @@ def TourScraper():
         #driver.execute_script("arguments[0].click();", button)
 
         #select "10" from dropdown
-        select_element = driver.find_element(By.ID, "visible-days-select")
-        select = Select(select_element)
-        select.select_by_value("10")
+        #select_element = driver.find_element(By.ID, "visible-days-select")
+        #select = Select(select_element)
+        #select.select_by_value("10")
 
         #this is next test to be commited and tried
        #driver.execute_script(
