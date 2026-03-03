@@ -116,11 +116,12 @@ def TourScraper():
             end_dt = datetime.fromtimestamp(end_ts, tz=timezone.utc)
             event_id = event.get("data-resid")
             group_tour = 'Group Tour' in event.get_text(strip=True)
+            guest_name = event.get_text(strip=True)
 
             if event_id in result:
                 result[event_id][2] += 1
             else:
-                result[event_id] = [start_dt, end_dt, 1, group_tour]
+                result[event_id] = [start_dt, end_dt, 1, group_tour, group_name]
 
     for event_id, info in result.items():
         if info[3]:
@@ -132,6 +133,7 @@ def TourScraper():
                 "end_dt": info[1],
                 "number_of_guests": info[2],
                 "group_tour": info[3],
+                "guest_name": info[4],
             }
         )
         if created:
