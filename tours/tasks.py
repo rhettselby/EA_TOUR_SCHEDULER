@@ -109,20 +109,20 @@ def TourScraper():
             EC.element_to_be_clickable((By.ID, "change-visible-days-btn"))
         )
         change_days_btn.click()
-
+        print("clicked day-range button")
         # Select 14 days from the revealed dropdown
         from selenium.webdriver.support.ui import Select
 
         visible_days_select = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.ID, "visible-days-select"))
-        )
+            EC.visibility_of_element_located((By.ID, "visible-days-select"))        )
         Select(visible_days_select).select_by_value("14")
 
+        print("changed day-range view")
         # Wait for the schedule to reload with 14-day view
         WebDriverWait(driver, 30).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "event"))
+            lambda d: d.find_element(By.CLASS_NAME, "visible-days-numeral").text == "14"
         )
-
+        print("14 day range found")
         current_week_html = driver.page_source
         print("loaded html")
     #ensure driver always quits
