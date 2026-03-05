@@ -1,23 +1,33 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState, useEffect } from "react";
 
 function App() {
+  const [tours, setTours] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/tours/")
+      .then(res => res.json())
+      .then(data => {
+        setTours(data);
+        setLoading(false);
+      })
+      .catch(err => console.error("Error fetching tours:", err));
+  }, []);
+
+  if (loading) return <p>Loading tours...</p>;
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>Upcoming Tours</h1>
+      {tours.map(tour => (
+        <div key={tour.id}>
+          <p>{tour.guest_name}</p>
+          <p>{tour.start_dt}</p>
+          <p>{tour.end_dt}</p>
+          <p>Guests: {tour.number_of_guests}</p>
+          {tour.group_tour && <p>Group Tour</p>}
+        </div>
+      ))}
     </div>
   );
 }
