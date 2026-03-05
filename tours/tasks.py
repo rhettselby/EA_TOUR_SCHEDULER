@@ -26,7 +26,7 @@ from twilio.rest import Client
 
 ####Automatic Texts sent by Twilio #####
 
-DOT_NUMBERS = ['+18052456513', '+16196369384', '+16106205106']
+DOT_NUMBERS = ['+18052456513']
 
 def send_text(start_dt, group_tour):
 
@@ -139,6 +139,6 @@ def TourScraper():
             }
         )
         if created:
-            #send_text(info[0], info[3])
+            send_text(info[0], info[3])
             update_sheet(info[0], info[3])
 

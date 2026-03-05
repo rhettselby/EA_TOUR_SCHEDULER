@@ -9,6 +9,11 @@ import time
 from tours.tasks import TourScraper
 # Create your views here.
 
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .serializers import TourSerializer
+
+
 
 def view_tours(request):
 
@@ -33,5 +38,31 @@ def view_tours(request):
 def get_tours(request):
     TourScraper.delay()
     return redirect("/tours/")
+
+
+#####View_tours returning JSON for React to render#####
+@api_view(['GET'])
+def tours_api(request):
+
+    pst = pytz.timezone('America/Los_Angeles')
+
+    #Create two week zone starting at beginning of current week
+    today = timezone.now().astimezone(pst)
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=14)
+
+    #Django uses PST since we are passing timezone aware datetimes to filter
+    tours = Tour.objects.filter(start_dt__gte=start_of_week, end_dt__lte=end_of_week).order_by('start_dt')
+
+    #Convert times to PST
+    for tour in tours:
+        tour.start_dt = tour.start_dt.astimezone(pst)
+        tour.end_dt = tour.end_dt.astimezone(pst)
+
+    serializer = TourSerializer(tours, many=True)
+
+    return Response(serializer.data)
+
+
 
 
