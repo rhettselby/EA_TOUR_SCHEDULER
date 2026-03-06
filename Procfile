@@ -1,0 +1,1 @@
+web: python manage.py migrate && python manage.py backfill_week_numbers && gunicorn webscraper_project.wsgi

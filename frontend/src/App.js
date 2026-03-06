@@ -253,12 +253,12 @@ export default function App() {
               transition: "color 0.15s", flexShrink: 0,
             });
             return (
-              <div style={{ display: "flex", alignItems: "stretch", marginBottom: "32px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "32px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
                 <button onClick={() => setActiveWeekIdx(i => Math.max(0, i - 1))} disabled={!canPrev} style={arrowStyle(canPrev)}>&lt;</button>
 
                 <div style={{ flex: 1, textAlign: "center", padding: "12px 20px" }}>
                   <div style={{ fontSize: "22px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#0f172a", marginBottom: "2px" }}>
-                    W26 · Week {tours.find(t => getWeekKey(t.start_dt) === activeWeek)?.week_number ?? "—"}
+                    Winter '26 · Week {tours.find(t => getWeekKey(t.start_dt) === activeWeek)?.week_number ?? "—"}
                   </div>
                   <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "4px" }}>
                     {getWeekLabel(activeWeek).short}
