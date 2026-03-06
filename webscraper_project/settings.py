@@ -155,3 +155,7 @@ CELERY_BEAT_SCHEDULE = {
     }
 }
 
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://eatourscheduler-production.up.railway.app",
+]
