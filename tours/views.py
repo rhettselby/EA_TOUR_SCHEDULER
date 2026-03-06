@@ -12,8 +12,9 @@ from tours.tasks import TourScraper
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import TourSerializer
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.permissions import AllowAny
 
 
 def view_tours(request):
@@ -70,11 +71,14 @@ def tours_api(request):
     return Response(serializer.data)
 
 
-@csrf_exempt
+
+
 @api_view(['PATCH'])
+@authentication_classes([])
+@permission_classes([AllowAny])
 def update_status(request, tour_id):
     tour = Tour.objects.get(id=tour_id)
-    tour.status=request.data.get('status')
+    tour.status = request.data.get('status')
     tour.save()
     return Response({"message": "Tour Status Updated"})
 
