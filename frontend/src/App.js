@@ -154,14 +154,16 @@ export default function App() {
   const totalConfirmed = tours.filter(t => t.status === "confirmed").length;
   const totalUnassigned = tours.filter(t => t.status === "unassigned").length;
 
-  // Auto-select current week on load
+  // Auto-select current week on initial load only
+  const [initialWeekSet, setInitialWeekSet] = useState(false);
   useEffect(() => {
-    if (weekKeys.length > 0) {
+    if (!loading && !initialWeekSet && weekKeys.length > 0) {
       const todayWk = getWeekKey(new Date().toISOString());
       const idx = weekKeys.indexOf(todayWk);
       setActiveWeekIdx(idx >= 0 ? idx : 0);
+      setInitialWeekSet(true);
     }
-  }, [tours]);
+  }, [loading]);
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", background: "#f8fafc" }}>
@@ -244,31 +246,31 @@ export default function App() {
             const canPrev = activeWeekIdx > 0;
             const canNext = activeWeekIdx < weekKeys.length - 1;
             const arrowStyle = (enabled) => ({
-              padding: "0", width: "40px", height: "48px", background: enabled ? "#0f172a" : "#f1f5f9",
+              padding: "0", width: "48px", height: "48px", background: "#fff",
               border: "none", cursor: enabled ? "pointer" : "default",
-              color: enabled ? "#fff" : "#cbd5e0", fontSize: "18px", fontWeight: "700",
+              color: enabled ? "#0f172a" : "#cbd5e0", fontSize: "22px", fontWeight: "900",
               display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "background 0.15s", flexShrink: 0,
+              transition: "color 0.15s", flexShrink: 0,
             });
             return (
               <div style={{ display: "flex", alignItems: "stretch", marginBottom: "32px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-                <button onClick={() => setActiveWeekIdx(i => Math.max(0, i - 1))} disabled={!canPrev} style={arrowStyle(canPrev)}>←</button>
+                <button onClick={() => setActiveWeekIdx(i => Math.max(0, i - 1))} disabled={!canPrev} style={arrowStyle(canPrev)}>&lt;</button>
 
                 <div style={{ flex: 1, textAlign: "center", padding: "12px 20px" }}>
-                  <div style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "0.12em", textTransform: "uppercase", color: "#3b82f6", marginBottom: "4px" }}>
+                  <div style={{ fontSize: "22px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#0f172a", marginBottom: "2px" }}>
                     W26 · Week {tours.find(t => getWeekKey(t.start_dt) === activeWeek)?.week_number ?? "—"}
                   </div>
-                  <div style={{ fontSize: "15px", fontWeight: "600", color: "#0f172a" }}>
-                    {getWeekLabel(activeWeek).full}
+                  <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "4px" }}>
+                    {getWeekLabel(activeWeek).short}
                   </div>
-                  <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", display: "flex", justifyContent: "center", gap: "12px" }}>
+                  <div style={{ fontSize: "12px", color: "#94a3b8", display: "flex", justifyContent: "center", gap: "12px" }}>
                     <span>{activeWeekIdx + 1} of {weekKeys.length} weeks</span>
                     <span style={{ color: "#cbd5e0" }}>|</span>
                     <span style={{ color: "#3b82f6", fontWeight: "500" }}>{weekTourCount} {weekTourCount === 1 ? "tour" : "tours"} this week</span>
                   </div>
                 </div>
 
-                <button onClick={() => setActiveWeekIdx(i => Math.min(weekKeys.length - 1, i + 1))} disabled={!canNext} style={arrowStyle(canNext)}>→</button>
+                <button onClick={() => setActiveWeekIdx(i => Math.min(weekKeys.length - 1, i + 1))} disabled={!canNext} style={arrowStyle(canNext)}>&gt;</button>
               </div>
             );
           })()}
