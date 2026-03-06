@@ -239,39 +239,36 @@ export default function App() {
           </div>
 
           {/* Week navigation */}
-          {!loading && weekKeys.length > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: "0", marginBottom: "32px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-              <button
-                onClick={() => setActiveWeekIdx(i => Math.max(0, i - 1))}
-                disabled={activeWeekIdx === 0}
-                style={{
-                  padding: "14px 20px", background: "none", border: "none", borderRight: "1px solid #e2e8f0",
-                  cursor: activeWeekIdx === 0 ? "default" : "pointer", color: activeWeekIdx === 0 ? "#cbd5e0" : "#0f172a",
-                  fontSize: "18px", fontWeight: "bold", transition: "background 0.15s",
-                }}
-              >‹</button>
+          {!loading && weekKeys.length > 0 && (() => {
+            const weekTourCount = Object.values(grouped[activeWeek] || {}).reduce((sum, day) => sum + day.length, 0);
+            const canPrev = activeWeekIdx > 0;
+            const canNext = activeWeekIdx < weekKeys.length - 1;
+            const arrowStyle = (enabled) => ({
+              padding: "0", width: "48px", height: "64px", background: enabled ? "#0f172a" : "#f1f5f9",
+              border: "none", cursor: enabled ? "pointer" : "default",
+              color: enabled ? "#fff" : "#cbd5e0", fontSize: "24px", fontWeight: "700",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "background 0.15s", flexShrink: 0,
+            });
+            return (
+              <div style={{ display: "flex", alignItems: "stretch", marginBottom: "32px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+                <button onClick={() => setActiveWeekIdx(i => Math.max(0, i - 1))} disabled={!canPrev} style={arrowStyle(canPrev)}>←</button>
 
-              <div style={{ flex: 1, textAlign: "center" }}>
-                <div style={{ fontSize: "15px", fontWeight: "600", color: "#0f172a" }}>
-                  {getWeekLabel(activeWeek).full}
+                <div style={{ flex: 1, textAlign: "center", padding: "14px 20px" }}>
+                  <div style={{ fontSize: "15px", fontWeight: "600", color: "#0f172a" }}>
+                    {getWeekLabel(activeWeek).full}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", display: "flex", justifyContent: "center", gap: "12px" }}>
+                    <span>{activeWeekIdx + 1} of {weekKeys.length} weeks</span>
+                    <span style={{ color: "#cbd5e0" }}>|</span>
+                    <span style={{ color: "#3b82f6", fontWeight: "500" }}>{weekTourCount} {weekTourCount === 1 ? "tour" : "tours"} this week</span>
+                  </div>
                 </div>
-                <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px" }}>
-                  {weekKeys.length > 1 ? `${activeWeekIdx + 1} of ${weekKeys.length} weeks` : "1 week"}
-                </div>
+
+                <button onClick={() => setActiveWeekIdx(i => Math.min(weekKeys.length - 1, i + 1))} disabled={!canNext} style={arrowStyle(canNext)}>→</button>
               </div>
-
-              <button
-                onClick={() => setActiveWeekIdx(i => Math.min(weekKeys.length - 1, i + 1))}
-                disabled={activeWeekIdx === weekKeys.length - 1}
-                style={{
-                  padding: "14px 20px", background: "none", border: "none", borderLeft: "1px solid #e2e8f0",
-                  cursor: activeWeekIdx === weekKeys.length - 1 ? "default" : "pointer",
-                  color: activeWeekIdx === weekKeys.length - 1 ? "#cbd5e0" : "#0f172a",
-                  fontSize: "18px", fontWeight: "bold", transition: "background 0.15s",
-                }}
-              >›</button>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Tours for active week */}
           {loading ? (
