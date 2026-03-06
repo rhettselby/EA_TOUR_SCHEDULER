@@ -73,7 +73,7 @@ function TourCard({ tour, onStatusChange }) {
       <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
         <div>
           <div style={{ fontSize: "13px", color: status.color, fontFamily: "'DM Mono', monospace", letterSpacing: "0.05em", fontWeight: "600" }}>
-            {formatTime(tour.start_dt)} — {formatTime(tour.end_dt)}
+            {formatTime(tour.start_dt)}
           </div>
           <div style={{ fontSize: "16px", fontWeight: "600", color: "#1a202c", marginTop: "2px", fontFamily: "'Playfair Display', serif" }}>
             {tour.guest_name || "Guest"}
@@ -244,9 +244,9 @@ export default function App() {
             const canPrev = activeWeekIdx > 0;
             const canNext = activeWeekIdx < weekKeys.length - 1;
             const arrowStyle = (enabled) => ({
-              padding: "0", width: "48px", height: "64px", background: enabled ? "#0f172a" : "#f1f5f9",
+              padding: "0", width: "40px", height: "48px", background: enabled ? "#0f172a" : "#f1f5f9",
               border: "none", cursor: enabled ? "pointer" : "default",
-              color: enabled ? "#fff" : "#cbd5e0", fontSize: "24px", fontWeight: "700",
+              color: enabled ? "#fff" : "#cbd5e0", fontSize: "18px", fontWeight: "700",
               display: "flex", alignItems: "center", justifyContent: "center",
               transition: "background 0.15s", flexShrink: 0,
             });
@@ -254,7 +254,10 @@ export default function App() {
               <div style={{ display: "flex", alignItems: "stretch", marginBottom: "32px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
                 <button onClick={() => setActiveWeekIdx(i => Math.max(0, i - 1))} disabled={!canPrev} style={arrowStyle(canPrev)}>←</button>
 
-                <div style={{ flex: 1, textAlign: "center", padding: "14px 20px" }}>
+                <div style={{ flex: 1, textAlign: "center", padding: "12px 20px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: "700", letterSpacing: "0.12em", textTransform: "uppercase", color: "#3b82f6", marginBottom: "4px" }}>
+                    W26 · Week {tours.find(t => getWeekKey(t.start_dt) === activeWeek)?.week_number ?? "—"}
+                  </div>
                   <div style={{ fontSize: "15px", fontWeight: "600", color: "#0f172a" }}>
                     {getWeekLabel(activeWeek).full}
                   </div>
