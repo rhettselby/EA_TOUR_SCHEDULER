@@ -65,4 +65,14 @@ def tours_api(request):
 
 
 
+@api_view(['PATCH'])
+def update_status(request, tour_id):
+    tour = Tour.objects.get(id=tour_id)
+    tour.status=request.data.get('status')
+    tour.save()
+    return Response({"message": "Tour Status Updated"})
+
+
+
+
 

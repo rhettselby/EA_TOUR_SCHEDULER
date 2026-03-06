@@ -10,6 +10,15 @@ class Tour(models.Model):
     group_tour = models.BooleanField(default=False)
     guest_name = models.CharField(max_length=255, blank=True, null=True, default=None)
 
+    STATUS_CHOICES = [
+        ('unassigned', 'Unassigned'),
+        ('message_sent', 'Message Sent'),
+        ('confirmed', 'Confirmed'),
+        ('past_event', 'Past Event'),
+    ]
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='unassigned')
+
 
     def __str__(self):
         return f"{self.start_dt} to {self.end_dt}"
