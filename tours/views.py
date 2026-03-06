@@ -12,7 +12,8 @@ from tours.tasks import TourScraper
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import TourSerializer
-
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 
 def view_tours(request):
@@ -41,6 +42,7 @@ def get_tours(request):
 
 
 #####View_tours returning JSON for React to render#####
+@csrf_exempt
 @api_view(['GET'])
 def tours_api(request):
 
