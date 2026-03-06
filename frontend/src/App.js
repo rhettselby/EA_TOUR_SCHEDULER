@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 
 const STATUS_CONFIG = {
-  unassigned: { label: "Unassigned", color: "#e53e3e", bg: "#fff5f5", border: "#fc8181" },
-  message_sent: { label: "Message Sent", color: "#b7791f", bg: "#fffff0", border: "#f6e05e" },
-  confirmed: { label: "Confirmed", color: "#276749", bg: "#f0fff4", border: "#68d391" },
-  past_event: { label: "Past Event", color: "#4a5568", bg: "#f7fafc", border: "#a0aec0" },
+  unassigned: { label: "Unassigned", color: "#c53030", bg: "#fff5f5", border: "#fc8181", light: "#fed7d7" },
+  message_sent: { label: "Message Sent", color: "#b7791f", bg: "#fffff0", border: "#ecc94b", light: "#fefcbf" },
+  confirmed: { label: "Confirmed", color: "#276749", bg: "#f0fff4", border: "#48bb78", light: "#c6f6d5" },
+  past_event: { label: "Past Event", color: "#2d3748", bg: "#f7fafc", border: "#718096", light: "#e2e8f0" },
 };
 
 function formatTime(dt) {
@@ -13,18 +13,16 @@ function formatTime(dt) {
 }
 
 function formatDayHeader(dateStr) {
-  const d = new Date(dateStr);
+  const d = new Date(dateStr + "T12:00:00");
   return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 }
 
-function getWeekLabel(dateStr) {
-  const d = new Date(dateStr);
-  const weekStart = new Date(d);
-  weekStart.setDate(d.getDate() - d.getDay());
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
+function getWeekLabel(weekStartStr) {
+  const d = new Date(weekStartStr + "T12:00:00");
+  const weekEnd = new Date(d);
+  weekEnd.setDate(d.getDate() + 6);
   const fmt = (x) => x.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  return `Week of ${fmt(weekStart)} – ${fmt(weekEnd)}`;
+  return { short: `${fmt(d)} – ${fmt(weekEnd)}`, full: `Week of ${fmt(d)} – ${fmt(weekEnd)}` };
 }
 
 function getDateKey(dt) {
@@ -60,44 +58,43 @@ function TourCard({ tour, onStatusChange }) {
 
   return (
     <div style={{
-      background: "#fff",
-      border: `1px solid #e2e8f0`,
-      borderLeft: `4px solid ${status.border}`,
-      borderRadius: "8px",
+      background: status.light,
+      border: `2px solid ${status.border}`,
+      borderRadius: "10px",
       padding: "16px 20px",
       marginBottom: "10px",
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
-      boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-      transition: "box-shadow 0.2s",
+      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
       opacity: updating ? 0.6 : 1,
+      transition: "opacity 0.2s",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
         <div>
-          <div style={{ fontSize: "13px", color: "#718096", fontFamily: "'DM Mono', monospace", letterSpacing: "0.05em" }}>
+          <div style={{ fontSize: "13px", color: status.color, fontFamily: "'DM Mono', monospace", letterSpacing: "0.05em", fontWeight: "600" }}>
             {formatTime(tour.start_dt)} — {formatTime(tour.end_dt)}
           </div>
           <div style={{ fontSize: "16px", fontWeight: "600", color: "#1a202c", marginTop: "2px", fontFamily: "'Playfair Display', serif" }}>
             {tour.guest_name || "Guest"}
           </div>
-          <div style={{ display: "flex", gap: "10px", marginTop: "6px", alignItems: "center" }}>
-            <span style={{ fontSize: "12px", color: "#718096", background: "#f7fafc", border: "1px solid #e2e8f0", borderRadius: "4px", padding: "2px 8px" }}>
+          <div style={{ display: "flex", gap: "8px", marginTop: "6px", alignItems: "center" }}>
+            <span style={{ fontSize: "12px", color: "#4a5568", background: "rgba(255,255,255,0.7)", border: "1px solid rgba(0,0,0,0.08)", borderRadius: "4px", padding: "2px 8px" }}>
               {tour.number_of_guests} {tour.number_of_guests === 1 ? "guest" : "guests"}
             </span>
             {tour.group_tour && (
-              <span style={{ fontSize: "12px", color: "#553c9a", background: "#faf5ff", border: "1px solid #d6bcfa", borderRadius: "4px", padding: "2px 8px" }}>
+              <span style={{ fontSize: "12px", color: "#553c9a", background: "rgba(255,255,255,0.7)", border: "1px solid #d6bcfa", borderRadius: "4px", padding: "2px 8px" }}>
                 Group Tour
               </span>
             )}
-            <span style={{ fontSize: "12px", color: status.color, background: status.bg, border: `1px solid ${status.border}`, borderRadius: "4px", padding: "2px 8px", fontWeight: "500" }}>
+            <span style={{ fontSize: "12px", color: status.color, background: "rgba(255,255,255,0.7)", border: `1px solid ${status.border}`, borderRadius: "4px", padding: "2px 8px", fontWeight: "600" }}>
               {status.label}
             </span>
           </div>
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: "6px" }}>
+      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
         {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
           <button
             key={key}
@@ -105,16 +102,16 @@ function TourCard({ tour, onStatusChange }) {
             disabled={updating || tour.status === key}
             title={cfg.label}
             style={{
-              width: "28px",
-              height: "28px",
+              width: "30px",
+              height: "30px",
               borderRadius: "50%",
-              border: tour.status === key ? `2px solid ${cfg.color}` : "2px solid transparent",
+              border: tour.status === key ? `3px solid #1a202c` : `2px solid ${cfg.border}`,
               background: cfg.border,
               cursor: tour.status === key ? "default" : "pointer",
-              opacity: tour.status === key ? 1 : 0.45,
+              opacity: tour.status === key ? 1 : 0.5,
               transition: "opacity 0.15s, transform 0.15s",
               outline: "none",
-              transform: tour.status === key ? "scale(1.15)" : "scale(1)",
+              transform: tour.status === key ? "scale(1.2)" : "scale(1)",
             }}
           />
         ))}
@@ -126,6 +123,7 @@ function TourCard({ tour, onStatusChange }) {
 export default function App() {
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeWeekIdx, setActiveWeekIdx] = useState(0);
 
   useEffect(() => {
     fetch("/api/tours/")
@@ -148,9 +146,22 @@ export default function App() {
     grouped[wk][dk].push(tour);
   });
 
+  const weekKeys = Object.keys(grouped).sort();
+  const activeWeek = weekKeys[activeWeekIdx];
+  const activeWeekDays = activeWeek ? grouped[activeWeek] : {};
+
   const totalToday = tours.filter(t => getDateKey(t.start_dt) === getDateKey(new Date().toISOString())).length;
   const totalConfirmed = tours.filter(t => t.status === "confirmed").length;
   const totalUnassigned = tours.filter(t => t.status === "unassigned").length;
+
+  // Auto-select current week on load
+  useEffect(() => {
+    if (weekKeys.length > 0) {
+      const todayWk = getWeekKey(new Date().toISOString());
+      const idx = weekKeys.indexOf(todayWk);
+      setActiveWeekIdx(idx >= 0 ? idx : 0);
+    }
+  }, [tours]);
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", background: "#f8fafc" }}>
@@ -162,12 +173,8 @@ export default function App() {
         display: "flex", flexDirection: "column", padding: "32px 0",
       }}>
         <div style={{ padding: "0 24px 32px", borderBottom: "1px solid #1e293b" }}>
-          <div style={{ fontSize: "11px", letterSpacing: "0.15em", color: "#64748b", textTransform: "uppercase", marginBottom: "6px" }}>
-            EA Tours
-          </div>
-          <div style={{ fontSize: "22px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#f1f5f9" }}>
-            Scheduler
-          </div>
+          <div style={{ fontSize: "11px", letterSpacing: "0.15em", color: "#64748b", textTransform: "uppercase", marginBottom: "6px" }}>EA Tours</div>
+          <div style={{ fontSize: "22px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#f1f5f9" }}>Scheduler</div>
         </div>
 
         <nav style={{ padding: "24px 16px", flex: 1 }}>
@@ -192,9 +199,7 @@ export default function App() {
 
         {/* Status legend */}
         <div style={{ padding: "24px", borderTop: "1px solid #1e293b" }}>
-          <div style={{ fontSize: "11px", letterSpacing: "0.1em", color: "#475569", textTransform: "uppercase", marginBottom: "12px" }}>
-            Status
-          </div>
+          <div style={{ fontSize: "11px", letterSpacing: "0.1em", color: "#475569", textTransform: "uppercase", marginBottom: "12px" }}>Status</div>
           {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
             <div key={key} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
               <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: cfg.border }} />
@@ -210,9 +215,7 @@ export default function App() {
 
           {/* Header */}
           <div style={{ marginBottom: "32px" }}>
-            <h1 style={{ fontSize: "28px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#0f172a", margin: 0 }}>
-              Tour Schedule
-            </h1>
+            <h1 style={{ fontSize: "28px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#0f172a", margin: 0 }}>Tour Schedule</h1>
             <p style={{ color: "#64748b", marginTop: "4px", fontSize: "14px" }}>
               {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
             </p>
@@ -229,34 +232,64 @@ export default function App() {
                 background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px",
                 padding: "20px 24px", boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
               }}>
-                <div style={{ fontSize: "28px", fontWeight: "700", color: stat.color, fontFamily: "'Playfair Display', serif" }}>
-                  {stat.value}
-                </div>
+                <div style={{ fontSize: "28px", fontWeight: "700", color: stat.color, fontFamily: "'Playfair Display', serif" }}>{stat.value}</div>
                 <div style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>{stat.label}</div>
               </div>
             ))}
           </div>
 
-          {/* Tours */}
+          {/* Week navigation */}
+          {!loading && weekKeys.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "0", marginBottom: "32px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              <button
+                onClick={() => setActiveWeekIdx(i => Math.max(0, i - 1))}
+                disabled={activeWeekIdx === 0}
+                style={{
+                  padding: "14px 20px", background: "none", border: "none", borderRight: "1px solid #e2e8f0",
+                  cursor: activeWeekIdx === 0 ? "default" : "pointer", color: activeWeekIdx === 0 ? "#cbd5e0" : "#0f172a",
+                  fontSize: "18px", fontWeight: "bold", transition: "background 0.15s",
+                }}
+              >‹</button>
+
+              <div style={{ flex: 1, textAlign: "center" }}>
+                <div style={{ fontSize: "15px", fontWeight: "600", color: "#0f172a" }}>
+                  {getWeekLabel(activeWeek).full}
+                </div>
+                <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px" }}>
+                  {weekKeys.length > 1 ? `${activeWeekIdx + 1} of ${weekKeys.length} weeks` : "1 week"}
+                </div>
+              </div>
+
+              <button
+                onClick={() => setActiveWeekIdx(i => Math.min(weekKeys.length - 1, i + 1))}
+                disabled={activeWeekIdx === weekKeys.length - 1}
+                style={{
+                  padding: "14px 20px", background: "none", border: "none", borderLeft: "1px solid #e2e8f0",
+                  cursor: activeWeekIdx === weekKeys.length - 1 ? "default" : "pointer",
+                  color: activeWeekIdx === weekKeys.length - 1 ? "#cbd5e0" : "#0f172a",
+                  fontSize: "18px", fontWeight: "bold", transition: "background 0.15s",
+                }}
+              >›</button>
+            </div>
+          )}
+
+          {/* Tours for active week */}
           {loading ? (
             <div style={{ color: "#94a3b8", fontSize: "15px" }}>Loading tours...</div>
-          ) : Object.keys(grouped).length === 0 ? (
+          ) : weekKeys.length === 0 ? (
             <div style={{ color: "#94a3b8", fontSize: "15px" }}>No upcoming tours found.</div>
           ) : (
-            Object.keys(grouped).sort().map((wk) => (
-              <div key={wk} style={{ marginBottom: "40px" }}>
-                <div style={{ fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "#94a3b8", fontWeight: "600", marginBottom: "16px", paddingBottom: "8px", borderBottom: "1px solid #e2e8f0" }}>
-                  {getWeekLabel(wk + "T12:00:00")}
+            Object.keys(activeWeekDays).sort().map((dk) => (
+              <div key={dk} style={{ marginBottom: "28px" }}>
+                <div style={{ fontSize: "14px", fontWeight: "700", color: "#334155", marginBottom: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3b82f6" }} />
+                  {formatDayHeader(dk)}
+                  <span style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "400" }}>
+                    {activeWeekDays[dk].length} {activeWeekDays[dk].length === 1 ? "tour" : "tours"}
+                  </span>
                 </div>
-                {Object.keys(grouped[wk]).sort().map((dk) => (
-                  <div key={dk} style={{ marginBottom: "24px" }}>
-                    <div style={{ fontSize: "14px", fontWeight: "600", color: "#334155", marginBottom: "10px" }}>
-                      {formatDayHeader(dk + "T12:00:00")}
-                    </div>
-                    {grouped[wk][dk].map((tour) => (
-                      <TourCard key={tour.id} tour={tour} onStatusChange={handleStatusChange} />
-                    ))}
-                  </div>
+                {activeWeekDays[dk].map((tour) => (
+                  <TourCard key={tour.id} tour={tour} onStatusChange={handleStatusChange} />
                 ))}
               </div>
             ))
