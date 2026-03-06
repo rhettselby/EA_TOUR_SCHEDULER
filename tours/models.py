@@ -1,4 +1,9 @@
+from datetime import datetime, timezone
 from django.db import models
+import os
+
+
+
 
 # Create your models here.
 
@@ -9,6 +14,7 @@ class Tour(models.Model):
     number_of_guests = models.PositiveIntegerField()
     group_tour = models.BooleanField(default=False)
     guest_name = models.CharField(max_length=255, blank=True, null=True, default=None)
+    week_number = models.PositiveIntegerField(null=True, blank=True)
 
     STATUS_CHOICES = [
         ('unassigned', 'Unassigned'),

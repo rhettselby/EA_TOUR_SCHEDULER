@@ -23,6 +23,8 @@ PASSWORD = os.environ.get('BOOKED_PASSWORD')
 
 from twilio.rest import Client
 
+quarter_start = os.environ.get('QUARTER_START_DATE')
+
 
 ####Automatic Texts sent by Twilio #####
 
@@ -128,6 +130,12 @@ def TourScraper():
     for event_id, info in result.items():
         if info[3]:
             event_id = f"GROUP_TOUR at_{info[0]}"
+
+        #determine week number
+        quarter_start_dt = datetime.strptime(quarter_start, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+        days = (info[0] - quarter_start_dt).days
+        week = days // 7 + 1
+
         _, created = Tour.objects.get_or_create(
             event_id=event_id,
             defaults={
@@ -136,6 +144,8 @@ def TourScraper():
                 "number_of_guests": info[2],
                 "group_tour": info[3],
                 "guest_name": info[4],
+                "week_number": week,
+                "status": "unassigned",
             }
         )
         if created:
