@@ -42,7 +42,6 @@ def get_tours(request):
 
 
 #####View_tours returning JSON for React to render#####
-@csrf_exempt
 @api_view(['GET'])
 def tours_api(request):
 
@@ -71,7 +70,7 @@ def tours_api(request):
     return Response(serializer.data)
 
 
-
+@csrf_exempt
 @api_view(['PATCH'])
 def update_status(request, tour_id):
     tour = Tour.objects.get(id=tour_id)
