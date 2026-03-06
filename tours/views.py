@@ -62,7 +62,7 @@ def tours_api(request):
         if tour.start_dt < timezone.now().astimezone(pst):
             if tour.status != "past_event":
                 tour.status = "past_event"
-                tour.save()
+                tour.save(update_fields=['status'])
 
     serializer = TourSerializer(tours, many=True)
 
