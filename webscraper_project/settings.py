@@ -48,13 +48,20 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://eatourscheduler-production.up.railway.app",
+]
+
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = True
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    #'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -156,6 +163,3 @@ CELERY_BEAT_SCHEDULE = {
 }
 
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://eatourscheduler-production.up.railway.app",
-]
