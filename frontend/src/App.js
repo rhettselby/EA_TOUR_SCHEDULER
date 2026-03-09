@@ -27,14 +27,14 @@ function getWeekLabel(weekStartStr) {
 
 function getDateKey(dt) {
   const d = new Date(dt);
-  return d.toISOString().split("T")[0];
+  return d.toLocaleDateString("en-CA"); // "en-CA" gives YYYY-MM-DD format
 }
 
 function getWeekKey(dt) {
   const d = new Date(dt);
   const weekStart = new Date(d);
   weekStart.setDate(d.getDate() - d.getDay());
-  return weekStart.toISOString().split("T")[0];
+  return weekStart.toLocaleDateString("en-CA"); // replaces toISOString()
 }
 
 function TourCard({ tour, onStatusChange }) {
@@ -158,7 +158,7 @@ export default function App() {
   const [initialWeekSet, setInitialWeekSet] = useState(false);
   useEffect(() => {
     if (!loading && !initialWeekSet && weekKeys.length > 0) {
-      const todayWk = getWeekKey(new Date().toISOString());
+      const todayWk = getWeekKey(new Date()); // remove .toISOString()
       const idx = weekKeys.indexOf(todayWk);
       setActiveWeekIdx(idx >= 0 ? idx : 0);
       setInitialWeekSet(true);
