@@ -8,16 +8,6 @@ from google.oauth2.service_account import Credentials
 import json
 
 
-scopes = [
-    "https://www.googleapis.com/auth/spreadsheets"
-]
-
-creds_json = os.environ.get("GSHEETS_CREDENTIALS_JSON")
-creds_dict = json.loads(creds_json)
-creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
-gspread_client = gspread.authorize(creds)
-
-
 
 
 slack_client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
@@ -149,6 +139,16 @@ def get_sheet_url(week_number: int) -> dict:
     """
 
     try:
+
+        scopes = [
+            "https://www.googleapis.com/auth/spreadsheets"
+        ]
+
+        creds_json = os.environ.get("GSHEETS_CREDENTIALS_JSON")
+        creds_dict = json.loads(creds_json)
+        creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+        gspread_client = gspread.authorize(creds)
+
 
         base_url = "https://docs.google.com/spreadsheets/d/1WE4y8-a7Zxb3dEuRp2hQ4O22JYqn9IJwFnB7Xq1ptes/edit"
         # get worksheet gid by name
