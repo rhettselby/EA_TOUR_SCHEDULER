@@ -35,7 +35,7 @@ async def call_agent_async(runner, user_id, session_id, query):
 
 ##### IMPLEMENT PERSISTENCE ######
 
-db_url=os.environ.get("POSTGRESQL_URL")
+db_url=os.environ.get("DATABASE_URL")
 session_service = DatabaseSessionService(db_url=db_url)
 initial_state = {
     "name": "Rhett",
