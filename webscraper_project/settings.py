@@ -84,6 +84,14 @@ TEMPLATES = [
     },
 ]
 
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.environ.get("REDIS_URL"),
+    }
+}
+
+
 WSGI_APPLICATION = 'webscraper_project.wsgi.application'
 
 

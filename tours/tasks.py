@@ -18,6 +18,9 @@ from .models import Tour
 from gsheets.services import update_sheet
 USERNAME = os.environ.get('BOOKED_USERNAME')
 PASSWORD = os.environ.get('BOOKED_PASSWORD')
+#Ai Agent
+from agents.utils import run_agent
+import asyncio
 
 
 
@@ -151,4 +154,21 @@ def TourScraper():
         if created:
             #send_text(info[0], info[3])
             update_sheet(info[0], info[3])
+            run_agent_celery.delay(event_id, week)
+
+@shared_task
+def run_agent_celery(event_id, week):
+
+    tour = Tour.objects.get(event_id=event_id)
+    
+    #convert to PST
+    pst = ZoneInfo("America/Los_Angeles")
+    start_dt_pst = tour.start_dt.astimezone(pst)
+
+    #extract day + hour
+    week_day = start_dt_pst.strftime('%A')
+    hour = start_dt_pst.hour 
+
+    query = f"Handle this incoming tour with week_day: {week_day}, time: {hour}, week_number: {week}, event_id: {event_id}, and status: unassigned. Delegate work to slack_agent"
+    asyncio.run(run_agent(query))
 

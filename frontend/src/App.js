@@ -27,14 +27,14 @@ function getWeekLabel(weekStartStr) {
 
 function getDateKey(dt) {
   const d = new Date(dt);
-  return d.toLocaleDateString("en-CA"); // "en-CA" gives YYYY-MM-DD format
+  return d.toLocaleDateString("en-CA");
 }
 
 function getWeekKey(dt) {
   const d = new Date(dt);
   const weekStart = new Date(d);
   weekStart.setDate(d.getDate() - d.getDay());
-  return weekStart.toLocaleDateString("en-CA"); // replaces toISOString()
+  return weekStart.toLocaleDateString("en-CA");
 }
 
 function TourCard({ tour, onStatusChange }) {
@@ -93,7 +93,6 @@ function TourCard({ tour, onStatusChange }) {
           </div>
         </div>
       </div>
-
       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
         {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
           <button
@@ -102,15 +101,11 @@ function TourCard({ tour, onStatusChange }) {
             disabled={updating || tour.status === key}
             title={cfg.label}
             style={{
-              width: "30px",
-              height: "30px",
-              borderRadius: "50%",
+              width: "30px", height: "30px", borderRadius: "50%",
               border: tour.status === key ? `3px solid #1a202c` : `2px solid ${cfg.border}`,
-              background: cfg.border,
-              cursor: tour.status === key ? "default" : "pointer",
+              background: cfg.border, cursor: tour.status === key ? "default" : "pointer",
               opacity: tour.status === key ? 1 : 0.5,
-              transition: "opacity 0.15s, transform 0.15s",
-              outline: "none",
+              transition: "opacity 0.15s, transform 0.15s", outline: "none",
               transform: tour.status === key ? "scale(1.2)" : "scale(1)",
             }}
           />
@@ -124,6 +119,8 @@ export default function App() {
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeWeekIdx, setActiveWeekIdx] = useState(0);
+  const [scraping, setScraping] = useState(false);
+  const [scrapeMessage, setScrapeMessage] = useState(null);
 
   useEffect(() => {
     fetch("/api/tours/")
@@ -136,7 +133,25 @@ export default function App() {
     setTours((prev) => prev.map((t) => t.id === id ? { ...t, status: newStatus } : t));
   };
 
-  // Group by week then by day
+  const handleLoadTours = async () => {
+    setScraping(true);
+    setScrapeMessage(null);
+    try {
+      const res = await fetch("/api/tours/scrape/", { method: "POST" });
+      const data = await res.json();
+      if (res.status === 429) {
+        setScrapeMessage({ type: "warning", text: data.message });
+      } else {
+        setScrapeMessage({ type: "success", text: "Scraper triggered! New tours will appear shortly." });
+      }
+    } catch (e) {
+      setScrapeMessage({ type: "error", text: "Failed to trigger scraper." });
+    }
+    setScraping(false);
+    // clear message after 4 seconds
+    setTimeout(() => setScrapeMessage(null), 4000);
+  };
+
   const grouped = {};
   tours.forEach((tour) => {
     const wk = getWeekKey(tour.start_dt);
@@ -150,15 +165,14 @@ export default function App() {
   const activeWeek = weekKeys[activeWeekIdx];
   const activeWeekDays = activeWeek ? grouped[activeWeek] : {};
 
-  const totalToday = tours.filter(t => getDateKey(t.start_dt) === getDateKey(new Date().toISOString())).length;
+  const totalToday = tours.filter(t => getDateKey(t.start_dt) === getDateKey(new Date())).length;
   const totalConfirmed = tours.filter(t => t.status === "confirmed").length;
   const totalUnassigned = tours.filter(t => t.status === "unassigned").length;
 
-  // Auto-select current week on initial load only
   const [initialWeekSet, setInitialWeekSet] = useState(false);
   useEffect(() => {
     if (!loading && !initialWeekSet && weekKeys.length > 0) {
-      const todayWk = getWeekKey(new Date()); // remove .toISOString()
+      const todayWk = getWeekKey(new Date());
       const idx = weekKeys.indexOf(todayWk);
       setActiveWeekIdx(idx >= 0 ? idx : 0);
       setInitialWeekSet(true);
@@ -170,10 +184,7 @@ export default function App() {
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@600;700&family=DM+Mono&display=swap" rel="stylesheet" />
 
       {/* Sidebar */}
-      <div style={{
-        width: "240px", minWidth: "240px", background: "#0f172a", color: "#e2e8f0",
-        display: "flex", flexDirection: "column", padding: "32px 0",
-      }}>
+      <div style={{ width: "240px", minWidth: "240px", background: "#0f172a", color: "#e2e8f0", display: "flex", flexDirection: "column", padding: "32px 0" }}>
         <div style={{ padding: "0 24px 32px", borderBottom: "1px solid #1e293b" }}>
           <div style={{ fontSize: "11px", letterSpacing: "0.15em", color: "#64748b", textTransform: "uppercase", marginBottom: "6px" }}>EA Tours</div>
           <div style={{ fontSize: "22px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#f1f5f9" }}>Scheduler</div>
@@ -197,6 +208,40 @@ export default function App() {
               {item.soon && <span style={{ marginLeft: "auto", fontSize: "10px", color: "#475569", background: "#1e293b", padding: "2px 6px", borderRadius: "4px" }}>Soon</span>}
             </div>
           ))}
+
+          {/* Load Tours Button */}
+          <div style={{ marginTop: "8px", padding: "0 4px" }}>
+            <button
+              onClick={handleLoadTours}
+              disabled={scraping}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: "6px",
+                background: scraping ? "#1e293b" : "#1e3a5f",
+                border: "1px solid #2d5a8e", color: scraping ? "#64748b" : "#93c5fd",
+                fontSize: "14px", fontWeight: "500", cursor: scraping ? "default" : "pointer",
+                display: "flex", alignItems: "center", gap: "10px",
+                transition: "background 0.2s",
+              }}
+            >
+              <span>{scraping ? "⏳" : "🔄"}</span>
+              {scraping ? "Loading..." : "Load New Tours"}
+            </button>
+            {/* Warning */}
+            <div style={{ fontSize: "11px", color: "#475569", marginTop: "6px", padding: "0 4px", lineHeight: "1.4" }}>
+              ⚠️ Use sparingly — high memory usage
+            </div>
+            {/* Feedback message */}
+            {scrapeMessage && (
+              <div style={{
+                marginTop: "8px", padding: "8px 10px", borderRadius: "6px", fontSize: "12px",
+                background: scrapeMessage.type === "success" ? "#052e16" : scrapeMessage.type === "warning" ? "#2d1f00" : "#2d0a0a",
+                color: scrapeMessage.type === "success" ? "#86efac" : scrapeMessage.type === "warning" ? "#fcd34d" : "#fca5a5",
+                border: `1px solid ${scrapeMessage.type === "success" ? "#166534" : scrapeMessage.type === "warning" ? "#854d0e" : "#7f1d1d"}`,
+              }}>
+                {scrapeMessage.text}
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* Status legend */}
@@ -214,8 +259,6 @@ export default function App() {
       {/* Main content */}
       <div style={{ flex: 1, padding: "40px 48px", overflowY: "auto" }}>
         <div style={{ maxWidth: "860px" }}>
-
-          {/* Header */}
           <div style={{ marginBottom: "32px" }}>
             <h1 style={{ fontSize: "28px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#0f172a", margin: 0 }}>Tour Schedule</h1>
             <p style={{ color: "#64748b", marginTop: "4px", fontSize: "14px" }}>
@@ -223,24 +266,19 @@ export default function App() {
             </p>
           </div>
 
-          {/* Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "40px" }}>
             {[
               { label: "Today's Tours", value: totalToday, color: "#3b82f6" },
               { label: "Confirmed", value: totalConfirmed, color: "#22c55e" },
               { label: "Needs Attention", value: totalUnassigned, color: "#ef4444" },
             ].map((stat) => (
-              <div key={stat.label} style={{
-                background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px",
-                padding: "20px 24px", boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
-              }}>
+              <div key={stat.label} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "20px 24px", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
                 <div style={{ fontSize: "28px", fontWeight: "700", color: stat.color, fontFamily: "'Playfair Display', serif" }}>{stat.value}</div>
                 <div style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>{stat.label}</div>
               </div>
             ))}
           </div>
 
-          {/* Week navigation */}
           {!loading && weekKeys.length > 0 && (() => {
             const weekTourCount = Object.values(grouped[activeWeek] || {}).reduce((sum, day) => sum + day.length, 0);
             const canPrev = activeWeekIdx > 0;
@@ -255,27 +293,22 @@ export default function App() {
             return (
               <div style={{ display: "flex", alignItems: "center", marginBottom: "32px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
                 <button onClick={() => setActiveWeekIdx(i => Math.max(0, i - 1))} disabled={!canPrev} style={arrowStyle(canPrev)}>&lt;</button>
-
                 <div style={{ flex: 1, textAlign: "center", padding: "12px 20px" }}>
                   <div style={{ fontSize: "22px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#0f172a", marginBottom: "2px" }}>
                     Winter '26 · Week {tours.find(t => getWeekKey(t.start_dt) === activeWeek)?.week_number ?? "—"}
                   </div>
-                  <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "4px" }}>
-                    {getWeekLabel(activeWeek).short}
-                  </div>
+                  <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "4px" }}>{getWeekLabel(activeWeek).short}</div>
                   <div style={{ fontSize: "12px", color: "#94a3b8", display: "flex", justifyContent: "center", gap: "12px" }}>
                     <span>{activeWeekIdx + 1} of {weekKeys.length} weeks</span>
                     <span style={{ color: "#cbd5e0" }}>|</span>
                     <span style={{ color: "#3b82f6", fontWeight: "500" }}>{weekTourCount} {weekTourCount === 1 ? "tour" : "tours"} this week</span>
                   </div>
                 </div>
-
                 <button onClick={() => setActiveWeekIdx(i => Math.min(weekKeys.length - 1, i + 1))} disabled={!canNext} style={arrowStyle(canNext)}>&gt;</button>
               </div>
             );
           })()}
 
-          {/* Tours for active week */}
           {loading ? (
             <div style={{ color: "#94a3b8", fontSize: "15px" }}>Loading tours...</div>
           ) : weekKeys.length === 0 ? (
