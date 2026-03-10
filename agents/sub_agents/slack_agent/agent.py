@@ -32,7 +32,8 @@ slack_agent = Agent(
     4. After sending the slack message, update the status of the specified tour in the django database.
     Use the tool "update_tour_status" to do this, and this tool the following arguments:
         event_id: str, status: str
-    which you obtain from the prompt you received. The update status should reflect whether the slack message
+    which you obtain from the prompt you received. If after step 3 the status includes "skipped", call 
+    update_tour_status with "unassigned". The update status should reflect whether the slack message
     was sent successfuly. If the message was sent, then update status to "message_sent", otherwise update/keep
     the status to "unassigned"
     """,
