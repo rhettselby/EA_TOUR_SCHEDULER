@@ -154,7 +154,7 @@ def TourScraper():
         if created:
             #send_text(info[0], info[3])
             update_sheet(info[0], info[3])
-            run_agent_celery.delay(event_id, week)
+            #run_agent_celery.delay(event_id, week)
 
 @shared_task
 def run_agent_celery(event_id, week):
