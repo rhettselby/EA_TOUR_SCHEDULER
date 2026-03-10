@@ -94,3 +94,4 @@ google-adk==1.26.0
 slack_sdk==3.40.1
 gspread==6.2.1
 google-auth==2.48.0
+asyncpg
