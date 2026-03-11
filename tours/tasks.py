@@ -22,6 +22,9 @@ PASSWORD = os.environ.get('BOOKED_PASSWORD')
 from agents.utils import run_agent
 import asyncio
 
+#moved chrome driver install outside of function so runs
+#once each time celery starts up, not every time it runs task
+CHROME_DRIVER_PATH = ChromeDriverManager().install()
 
 
 from twilio.rest import Client
@@ -68,7 +71,7 @@ def TourScraper():
         options.binary_location = "/usr/bin/google-chrome"
 
         driver = webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()),
+            service=Service(CHROME_DRIVER_PATH),
             options=options
         )
         driver.get(OASA_website)

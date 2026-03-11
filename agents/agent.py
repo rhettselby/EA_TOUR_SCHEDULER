@@ -4,7 +4,7 @@ from .sub_agents.slack_agent.agent import slack_agent
 from .sub_agents.cancellation_agent.agent import cancellation_agent
 
 root_agent = Agent(
-    model='gemini-2.0-flash',
+    model='gemini-2.5-flash',
     name='root_agent',
     description= "Routes incoming tasks to the appropriate sub-agent",
 
