@@ -61,7 +61,7 @@ async def run_agent(query):
         print(f"Continuing existing session {SESSION_ID}")
 
     else:
-        new_session = session_service.create_session(
+        new_session = await session_service.create_session(
             app_name = APP_NAME,
             user_id = USER_ID,
             state = initial_state,
