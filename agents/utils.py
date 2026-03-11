@@ -35,25 +35,27 @@ async def call_agent_async(runner, user_id, session_id, query):
 
 ##### IMPLEMENT PERSISTENCE ######
 
-db_url = os.environ.get("DATABASE_URL")
-
-# DatabaseSessionService requires async driver
-if db_url and db_url.startswith("postgresql://"):
-    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-
-session_service = DatabaseSessionService(db_url=db_url)
-initial_state = {
-    "name": "Rhett",
-}
 
 async def run_agent(query):
     APP_NAME = "TOUR_SCHEDULER"
     USER_ID = "DEFAULT"
 
+    db_url = os.environ.get("DATABASE_URL")
+
+    # DatabaseSessionService requires async driver
+    if db_url and db_url.startswith("postgresql://"):
+        db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+    session_service = DatabaseSessionService(db_url=db_url)
+    initial_state = {
+    "name": "Rhett",
+    }
+
     existing_sessions = await session_service.list_sessions(
         app_name = APP_NAME,
         user_id = USER_ID,
     )
+
 
     #find_existing/create_new session
     if existing_sessions and len(existing_sessions.sessions) > 0:
