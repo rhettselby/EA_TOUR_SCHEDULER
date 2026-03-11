@@ -1,3 +1,4 @@
+import asyncio
 import os
 from dotenv import load_dotenv
 from google.adk.runners import Runner
@@ -83,3 +84,9 @@ async def run_agent(query):
     
 
     
+
+#For testing (call manually)
+if __name__ == "__main__":
+    import sys
+    tour_id = sys.argv[1] if len(sys.argv) > 1 else None
+    asyncio.run(run_agent("process this tour"))
