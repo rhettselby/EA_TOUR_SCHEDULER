@@ -1,11 +1,11 @@
-import asyncio
+
 import os
-from dotenv import load_dotenv
 from google.adk.runners import Runner
 #persistence
 from google.adk.sessions import DatabaseSessionService
 from .agent import root_agent
 from google.genai import types
+
 
 
 ##### AGENT CALL FUNCTIONS #####
@@ -81,12 +81,3 @@ async def run_agent(query):
     #call agent with runner + session + query
     await call_agent_async(runner, USER_ID, SESSION_ID, query)
 
-    
-
-    
-
-#For testing (call manually)
-if __name__ == "__main__":
-    import sys
-    tour_id = sys.argv[1] if len(sys.argv) > 1 else None
-    asyncio.run(run_agent("process this tour"))
