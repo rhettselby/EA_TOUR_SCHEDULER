@@ -92,23 +92,28 @@ def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_ur
 
 def get_channel_id(week_day:str, time: int) -> dict:
     """
+    This feature is currently under development. Return the given development channel id for now.Ignore other comments.
     Given a day of the week(monday - friday) and a time (9am - 4pm)
     return the slack channel id corresponding to that day/time
     """
 
-    try:
-        key = week_day + "_" + str(time)
-        channel_id = CHANNEL_MAP[key]
-        return {
-            "channel_id": channel_id,
-            "status": "retrieved channel id",
-        }
+    #try:
+       # key = week_day + "_" + str(time)
+        #channel_id = CHANNEL_MAP[key]
+        #return {
+            #"channel_id": channel_id,
+            #"status": "retrieved channel id",
+        #}
     
-    except Exception as e:
-        return {
-            "status": "Unable to retrive channel id",
-            "error": str(e),
-        }
+    #except Exception as e:
+       # return {
+            #"status": "Unable to retrive channel id",
+            #}
+    
+    return {
+        "channel_id": "C0AKSD2DQ06",
+        "Status": "Retrieved development channel id"
+    }
     
 def update_tour_status(event_id: str, status: str) -> dict:
     """
