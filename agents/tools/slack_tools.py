@@ -73,11 +73,12 @@ def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_ur
         }
 
     try:
-        text = f"""<!@channel> You have an upcoming tour on {week_day} (Week {week_number}). Please bold your name
-        <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! 
-        
-        -- Rhett & Dani """
-    
+        text = (
+            f"<!channel> You have an upcoming tour on {week_day} (Week {week_number}). Please bold "
+            f"your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
+            f"-- Rhett & Dani "
+        )
+
         slack_client.chat_postMessage(
             channel = channel_id,
             text = text
