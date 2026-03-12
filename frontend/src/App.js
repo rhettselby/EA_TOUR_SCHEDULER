@@ -115,6 +115,32 @@ function TourCard({ tour, onStatusChange }) {
   );
 }
 
+function CircleArrowButton({ onClick, disabled, direction }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: "36px", height: "36px", borderRadius: "50%",
+        border: `2px solid ${disabled ? "#e2e8f0" : hovered ? "#94a3b8" : "#cbd5e0"}`,
+        background: disabled ? "transparent" : hovered ? "#f1f5f9" : "#fff",
+        color: disabled ? "#cbd5e0" : "#0f172a",
+        fontSize: "18px", fontWeight: "600",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        cursor: disabled ? "default" : "pointer",
+        transition: "all 0.15s",
+        outline: "none", flexShrink: 0,
+        lineHeight: 1,
+      }}
+    >
+      {direction === "left" ? "‹" : "›"}
+    </button>
+  );
+}
+
 export default function App() {
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -167,10 +193,6 @@ export default function App() {
   const todayKey = getDateKey(new Date());
   const totalToday = tours.filter(t => getDateKey(t.start_dt) === todayKey).length;
 
-  // Global unassigned across ALL weeks
-  const globalUnassigned = tours.filter(t => t.status === "unassigned");
-  const unassignedWeekCount = new Set(globalUnassigned.map(t => getWeekKey(t.start_dt))).size;
-
   const [initialWeekSet, setInitialWeekSet] = useState(false);
   useEffect(() => {
     if (!loading && !initialWeekSet && weekKeys.length > 0) {
@@ -187,6 +209,7 @@ export default function App() {
     return {
       total: allTours.length,
       needAttention: allTours.filter(t => t.status === "unassigned").length,
+      confirmed: allTours.filter(t => t.status === "confirmed").length,
     };
   };
 
@@ -268,7 +291,7 @@ export default function App() {
         <div style={{ maxWidth: "860px" }}>
 
           {/* Header with inline today's tours */}
-          <div style={{ marginBottom: "24px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <div style={{ marginBottom: "32px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
             <div>
               <h1 style={{ fontSize: "28px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#0f172a", margin: 0 }}>Tour Schedule</h1>
               <p style={{ color: "#64748b", marginTop: "4px", fontSize: "14px", margin: "4px 0 0" }}>
@@ -278,67 +301,35 @@ export default function App() {
             {!loading && (
               <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "10px 18px", textAlign: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
                 <div style={{ fontSize: "22px", fontWeight: "700", color: "#3b82f6", fontFamily: "'Playfair Display', serif", lineHeight: 1 }}>{totalToday}</div>
-                <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Today</div>
+                <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Tours Today</div>
               </div>
             )}
           </div>
 
-          {/* Global alert banner */}
-          {!loading && globalUnassigned.length > 0 && (
-            <div
-              onClick={() => {
-                const firstUnassignedWeek = getWeekKey(globalUnassigned.sort((a, b) => new Date(a.start_dt) - new Date(b.start_dt))[0].start_dt);
-                const idx = weekKeys.indexOf(firstUnassignedWeek);
-                if (idx >= 0) setActiveWeekIdx(idx);
-              }}
-              style={{
-                background: "#fff5f5", border: "1px solid #fc8181", borderRadius: "8px",
-                padding: "12px 18px", marginBottom: "24px", cursor: "pointer",
-                display: "flex", alignItems: "center", gap: "10px",
-                transition: "background 0.15s",
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = "#fed7d7"}
-              onMouseLeave={e => e.currentTarget.style.background = "#fff5f5"}
-            >
-              <span style={{ fontSize: "16px" }}>⚠️</span>
-              <span style={{ fontSize: "14px", color: "#c53030", fontWeight: "600" }}>
-                {globalUnassigned.length} {globalUnassigned.length === 1 ? "tour" : "tours"} across {unassignedWeekCount} {unassignedWeekCount === 1 ? "week" : "weeks"} need attention
-              </span>
-              <span style={{ marginLeft: "auto", fontSize: "12px", color: "#fc8181" }}>Click to jump →</span>
-            </div>
-          )}
-
           {/* Week navigator */}
           {!loading && weekKeys.length > 0 && (() => {
-            const { total: weekTourCount, needAttention: weekNeedAttention } = getWeekStats(activeWeek);
+            const { total: weekTourCount, needAttention: weekNeedAttention, confirmed: weekConfirmed } = getWeekStats(activeWeek);
             const canPrev = activeWeekIdx > 0;
             const canNext = activeWeekIdx < weekKeys.length - 1;
-            const arrowStyle = (enabled) => ({
-              padding: "0", width: "48px", height: "48px", background: "#fff",
-              border: "none", cursor: enabled ? "pointer" : "default",
-              color: enabled ? "#0f172a" : "#cbd5e0", fontSize: "22px", fontWeight: "900",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "color 0.15s", flexShrink: 0,
-            });
             return (
-              <div style={{ marginBottom: "32px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <button onClick={() => setActiveWeekIdx(i => Math.max(0, i - 1))} disabled={!canPrev} style={arrowStyle(canPrev)}>&lt;</button>
-                  <div style={{ flex: 1, textAlign: "center", padding: "14px 20px" }}>
-                    <div style={{ fontSize: "20px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#0f172a", marginBottom: "2px" }}>
-                      Week {tours.find(t => getWeekKey(t.start_dt) === activeWeek)?.week_number ?? "—"}
-                    </div>
-                    <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "6px" }}>{getWeekLabel(activeWeek).short}</div>
-                    <div style={{ fontSize: "12px", display: "flex", justifyContent: "center", gap: "12px" }}>
-                      <span style={{ color: "#3b82f6", fontWeight: "500" }}>{weekTourCount} {weekTourCount === 1 ? "tour" : "tours"}</span>
-                      <span style={{ color: "#cbd5e0" }}>|</span>
-                      <span style={{ color: weekNeedAttention > 0 ? "#ef4444" : "#94a3b8", fontWeight: weekNeedAttention > 0 ? "600" : "400" }}>
-                        {weekNeedAttention > 0 ? `⚠️ ${weekNeedAttention} need attention` : "✓ all assigned"}
-                      </span>
-                    </div>
+              <div style={{ marginBottom: "32px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", boxShadow: "0 1px 3px rgba(0,0,0,0.04)", padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px" }}>
+                <CircleArrowButton onClick={() => setActiveWeekIdx(i => Math.max(0, i - 1))} disabled={!canPrev} direction="left" />
+                <div style={{ flex: 1, textAlign: "center" }}>
+                  <div style={{ fontSize: "20px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#0f172a", marginBottom: "2px" }}>
+                    Week {tours.find(t => getWeekKey(t.start_dt) === activeWeek)?.week_number ?? "—"}
                   </div>
-                  <button onClick={() => setActiveWeekIdx(i => Math.min(weekKeys.length - 1, i + 1))} disabled={!canNext} style={arrowStyle(canNext)}>&gt;</button>
+                  <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "6px" }}>{getWeekLabel(activeWeek).short}</div>
+                  <div style={{ fontSize: "12px", display: "flex", justifyContent: "center", gap: "12px" }}>
+                    <span style={{ color: "#3b82f6", fontWeight: "500" }}>{weekTourCount} {weekTourCount === 1 ? "tour" : "tours"}</span>
+                    <span style={{ color: "#cbd5e0" }}>|</span>
+                    <span style={{ color: "#22c55e", fontWeight: "500" }}>{weekConfirmed} confirmed</span>
+                    <span style={{ color: "#cbd5e0" }}>|</span>
+                    <span style={{ color: weekNeedAttention > 0 ? "#ef4444" : "#94a3b8", fontWeight: weekNeedAttention > 0 ? "600" : "400" }}>
+                      {weekNeedAttention > 0 ? `⚠️ ${weekNeedAttention} need attention` : "✓ all assigned"}
+                    </span>
+                  </div>
                 </div>
+                <CircleArrowButton onClick={() => setActiveWeekIdx(i => Math.min(weekKeys.length - 1, i + 1))} disabled={!canNext} direction="right" />
               </div>
             );
           })()}
