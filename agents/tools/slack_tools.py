@@ -63,6 +63,10 @@ def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_ur
     Send message to slack channel corresponding with given information to help coordinate tour"
     """
 
+    #debug print statements
+    print(f"Attempting to send message to channel {channel_id}")
+    print(f"Token exists: {bool(os.environ.get('SLACK_BOT_TOKEN'))}")
+
     if week_number < 1 or week_number > 10:
         return {
             "status": f"Skipped, tour during week {week_number} not in weeks 1-10"
@@ -92,10 +96,11 @@ def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_ur
 
 def get_channel_id(week_day:str, time: int) -> dict:
     """
-    This feature is currently under development. Return the given development channel id for now.Ignore other comments.
+    This feature is currently under development. Return the given development channel id "C0AKSD2DQ06" for now. Ignore other comments.
     Given a day of the week(monday - friday) and a time (9am - 4pm)
     return the slack channel id corresponding to that day/time
     """
+    print(f"getting channel _id")
 
     #try:
        # key = week_day + "_" + str(time)
@@ -120,6 +125,7 @@ def update_tour_status(event_id: str, status: str) -> dict:
     Update the tour status for a given tour in the django model database
     """
 
+    print("updating tour status")
     try:
         tour = Tour.objects.get(event_id = event_id)
         old_status = tour.status
@@ -147,6 +153,8 @@ def get_sheet_url(week_number: int) -> dict:
     """
     given a week number, extract the corresponding url for that week's google sheet page
     """
+
+    print("Getting sheet url")
 
     try:
 
