@@ -22,7 +22,7 @@ function getWeekLabel(weekStartStr) {
   const weekEnd = new Date(d);
   weekEnd.setDate(d.getDate() + 6);
   const fmt = (x) => x.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  return { short: `${fmt(d)} – ${fmt(weekEnd)}`, full: `Week of ${fmt(d)} – ${fmt(weekEnd)}` };
+  return { short: `${fmt(d)} – ${fmt(weekEnd)}` };
 }
 
 function getDateKey(dt) {
@@ -164,9 +164,12 @@ export default function App() {
   const activeWeek = weekKeys[activeWeekIdx];
   const activeWeekDays = activeWeek ? grouped[activeWeek] : {};
 
-  const totalToday = tours.filter(t => getDateKey(t.start_dt) === getDateKey(new Date())).length;
-  const totalConfirmed = tours.filter(t => t.status === "confirmed").length;
-  const totalUnassigned = tours.filter(t => t.status === "unassigned").length;
+  const todayKey = getDateKey(new Date());
+  const totalToday = tours.filter(t => getDateKey(t.start_dt) === todayKey).length;
+
+  // Global unassigned across ALL weeks
+  const globalUnassigned = tours.filter(t => t.status === "unassigned");
+  const unassignedWeekCount = new Set(globalUnassigned.map(t => getWeekKey(t.start_dt))).size;
 
   const [initialWeekSet, setInitialWeekSet] = useState(false);
   useEffect(() => {
@@ -178,14 +181,13 @@ export default function App() {
     }
   }, [loading]);
 
-  // Compute per-week stats
   const getWeekStats = (weekKey) => {
     const days = grouped[weekKey] || {};
     const allTours = Object.values(days).flat();
-    const total = allTours.length;
-    const needAttention = allTours.filter(t => t.status === "unassigned").length;
-    const confirmed = allTours.filter(t => t.status === "confirmed").length;
-    return { total, needAttention, confirmed };
+    return {
+      total: allTours.length,
+      needAttention: allTours.filter(t => t.status === "unassigned").length,
+    };
   };
 
   return (
@@ -218,7 +220,6 @@ export default function App() {
             </div>
           ))}
 
-          {/* Load Tours Button */}
           <div style={{ marginTop: "8px", padding: "0 4px" }}>
             <button
               onClick={handleLoadTours}
@@ -251,7 +252,6 @@ export default function App() {
           </div>
         </nav>
 
-        {/* Status legend */}
         <div style={{ padding: "24px", borderTop: "1px solid #1e293b" }}>
           <div style={{ fontSize: "11px", letterSpacing: "0.1em", color: "#475569", textTransform: "uppercase", marginBottom: "12px" }}>Status</div>
           {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
@@ -266,28 +266,51 @@ export default function App() {
       {/* Main content */}
       <div style={{ flex: 1, padding: "40px 48px", overflowY: "auto" }}>
         <div style={{ maxWidth: "860px" }}>
-          <div style={{ marginBottom: "32px" }}>
-            <h1 style={{ fontSize: "28px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#0f172a", margin: 0 }}>Tour Schedule</h1>
-            <p style={{ color: "#64748b", marginTop: "4px", fontSize: "14px" }}>
-              {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-            </p>
-          </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "40px" }}>
-            {[
-              { label: "Today's Tours", value: totalToday, color: "#3b82f6" },
-              { label: "Confirmed", value: totalConfirmed, color: "#22c55e" },
-              { label: "Needs Attention", value: totalUnassigned, color: "#ef4444" },
-            ].map((stat) => (
-              <div key={stat.label} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "20px 24px", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-                <div style={{ fontSize: "28px", fontWeight: "700", color: stat.color, fontFamily: "'Playfair Display', serif" }}>{stat.value}</div>
-                <div style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>{stat.label}</div>
+          {/* Header with inline today's tours */}
+          <div style={{ marginBottom: "24px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+            <div>
+              <h1 style={{ fontSize: "28px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#0f172a", margin: 0 }}>Tour Schedule</h1>
+              <p style={{ color: "#64748b", marginTop: "4px", fontSize: "14px", margin: "4px 0 0" }}>
+                {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+              </p>
+            </div>
+            {!loading && (
+              <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "10px 18px", textAlign: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+                <div style={{ fontSize: "22px", fontWeight: "700", color: "#3b82f6", fontFamily: "'Playfair Display', serif", lineHeight: 1 }}>{totalToday}</div>
+                <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Today</div>
               </div>
-            ))}
+            )}
           </div>
 
+          {/* Global alert banner */}
+          {!loading && globalUnassigned.length > 0 && (
+            <div
+              onClick={() => {
+                const firstUnassignedWeek = getWeekKey(globalUnassigned.sort((a, b) => new Date(a.start_dt) - new Date(b.start_dt))[0].start_dt);
+                const idx = weekKeys.indexOf(firstUnassignedWeek);
+                if (idx >= 0) setActiveWeekIdx(idx);
+              }}
+              style={{
+                background: "#fff5f5", border: "1px solid #fc8181", borderRadius: "8px",
+                padding: "12px 18px", marginBottom: "24px", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: "10px",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = "#fed7d7"}
+              onMouseLeave={e => e.currentTarget.style.background = "#fff5f5"}
+            >
+              <span style={{ fontSize: "16px" }}>⚠️</span>
+              <span style={{ fontSize: "14px", color: "#c53030", fontWeight: "600" }}>
+                {globalUnassigned.length} {globalUnassigned.length === 1 ? "tour" : "tours"} across {unassignedWeekCount} {unassignedWeekCount === 1 ? "week" : "weeks"} need attention
+              </span>
+              <span style={{ marginLeft: "auto", fontSize: "12px", color: "#fc8181" }}>Click to jump →</span>
+            </div>
+          )}
+
+          {/* Week navigator */}
           {!loading && weekKeys.length > 0 && (() => {
-            const { total: weekTourCount, needAttention: weekNeedAttention, confirmed: weekConfirmed } = getWeekStats(activeWeek);
+            const { total: weekTourCount, needAttention: weekNeedAttention } = getWeekStats(activeWeek);
             const canPrev = activeWeekIdx > 0;
             const canNext = activeWeekIdx < weekKeys.length - 1;
             const arrowStyle = (enabled) => ({
@@ -301,17 +324,13 @@ export default function App() {
               <div style={{ marginBottom: "32px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
                 <div style={{ display: "flex", alignItems: "center" }}>
                   <button onClick={() => setActiveWeekIdx(i => Math.max(0, i - 1))} disabled={!canPrev} style={arrowStyle(canPrev)}>&lt;</button>
-                  <div style={{ flex: 1, textAlign: "center", padding: "12px 20px" }}>
-                    <div style={{ fontSize: "22px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#0f172a", marginBottom: "2px" }}>
-                      Winter '26 · Week {tours.find(t => getWeekKey(t.start_dt) === activeWeek)?.week_number ?? "—"}
+                  <div style={{ flex: 1, textAlign: "center", padding: "14px 20px" }}>
+                    <div style={{ fontSize: "20px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#0f172a", marginBottom: "2px" }}>
+                      Week {tours.find(t => getWeekKey(t.start_dt) === activeWeek)?.week_number ?? "—"}
                     </div>
                     <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "6px" }}>{getWeekLabel(activeWeek).short}</div>
-                    <div style={{ fontSize: "12px", color: "#94a3b8", display: "flex", justifyContent: "center", gap: "12px", flexWrap: "wrap" }}>
-                      <span>{activeWeekIdx + 1} of {weekKeys.length} weeks</span>
-                      <span style={{ color: "#cbd5e0" }}>|</span>
-                      <span style={{ color: "#3b82f6", fontWeight: "500" }}>{weekTourCount} {weekTourCount === 1 ? "tour" : "tours"} this week</span>
-                      <span style={{ color: "#cbd5e0" }}>|</span>
-                      <span style={{ color: "#22c55e", fontWeight: "500" }}>{weekConfirmed} confirmed</span>
+                    <div style={{ fontSize: "12px", display: "flex", justifyContent: "center", gap: "12px" }}>
+                      <span style={{ color: "#3b82f6", fontWeight: "500" }}>{weekTourCount} {weekTourCount === 1 ? "tour" : "tours"}</span>
                       <span style={{ color: "#cbd5e0" }}>|</span>
                       <span style={{ color: weekNeedAttention > 0 ? "#ef4444" : "#94a3b8", fontWeight: weekNeedAttention > 0 ? "600" : "400" }}>
                         {weekNeedAttention > 0 ? `⚠️ ${weekNeedAttention} need attention` : "✓ all assigned"}
