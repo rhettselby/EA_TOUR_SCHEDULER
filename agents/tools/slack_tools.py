@@ -127,8 +127,8 @@ def update_tour_status(event_id: str, status: str) -> dict:
     """
     Update the tour status for a given tour in the django model database
     """
-
-    print("updating tour status")
+    #debug
+    print(f"updating tour status {event_id}")
     try:
         tour = Tour.objects.get(event_id = event_id)
         old_status = tour.status
@@ -142,6 +142,8 @@ def update_tour_status(event_id: str, status: str) -> dict:
         }
     
     except Tour.DoesNotExist:
+        #debug
+        print(f"Tour {event_id} not found.")
         return {
             "status": f"Tour with event_id {event_id} not found"
         }

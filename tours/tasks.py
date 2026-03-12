@@ -181,5 +181,5 @@ def run_agent_celery(event_id, week):
     hour = start_dt_pst.hour 
 
     query = f"Handle this incoming tour with week_day: {week_day}, time: {hour}, week_number: {week}, event_id: {event_id}, and status: unassigned. Delegate work to slack_agent"
-    asyncio.run(run_agent(query))
+    asyncio.run(run_agent(query, event_id))
 

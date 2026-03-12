@@ -10,7 +10,8 @@ slack_agent = Agent(
     instruction = """
 
     As the slack_agent your responsibility is to handle the tour's that you are given with three
-    main responsibilities.
+    main responsibilities. Always call all four Tours tools in order for every new tour, regardless of
+    previous interactions.
 
     1. Obtain the slack channel id for the corresponding slack channel, given a tour's
     day of the week (Monday-Friday) and its time(9am - 4pm) that you extract from the query.

@@ -29,6 +29,8 @@ async def call_agent_async(runner, user_id, session_id, query):
 
             if response:
                 final_response_text = response
+        return final_response_text
+    
     except Exception as e:
         print(f"Agent Error: {e}")
 
@@ -37,9 +39,9 @@ async def call_agent_async(runner, user_id, session_id, query):
 ##### IMPLEMENT PERSISTENCE ######
 
 
-async def run_agent(query):
+async def run_agent(query, event_id="DEFAULT"):
     APP_NAME = "TOUR_SCHEDULER"
-    USER_ID = "DEFAULT"
+    USER_ID = event_id
 
     db_url = os.environ.get("DATABASE_URL")
 
