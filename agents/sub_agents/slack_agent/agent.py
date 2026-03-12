@@ -2,7 +2,7 @@ from google.adk.agents.llm_agent import Agent
 from agents.tools.slack_tools import send_slack_message, get_channel_id, update_tour_status, get_sheet_url
 
 slack_agent = Agent(
-    model='gemini-2.0-flash',
+    model='gemini-2.5-flash',
     name='slack_agent',
     description= """sends slack tour message and updates the specified tour's status in 
     the django database""",

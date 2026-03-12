@@ -2,7 +2,7 @@
 from google.adk.agents.llm_agent import Agent
 
 cancellation_agent = Agent(
-    model='gemini-2.0-flash',
+    model='gemini-2.5-flash',
     name='cancellation_agent',
     description="Handles tour cancellations",
     instruction="You handle tour cancellations. This agent is not yet implemented.",
