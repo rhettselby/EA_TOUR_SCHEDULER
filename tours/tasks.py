@@ -147,31 +147,34 @@ def TourScraper():
                 result[event_id] = [start_dt, end_dt, 1, group_tour, guest_name]
 
     for event_id, info in result.items():
-        if info[3]:
-            event_id = f"GROUP_TOUR at_{info[0]}"
+        try:
+            if info[3]:
+                event_id = f"GROUP_TOUR at_{info[0]}"
 
-        #determine week number
-        quarter_start_dt = datetime.strptime(quarter_start, '%Y-%m-%d').replace(tzinfo=timezone.utc)
-        days = (info[0] - quarter_start_dt).days
-        week = days // 7 + 1
+            #determine week number
+            quarter_start_dt = datetime.strptime(quarter_start, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+            days = (info[0] - quarter_start_dt).days
+            week = days // 7 + 1
 
-        _, created = Tour.objects.get_or_create(
-            event_id=event_id,
-            defaults={
-                "start_dt": info[0],
-                "end_dt": info[1],
-                "number_of_guests": info[2],
-                "group_tour": info[3],
-                "guest_name": info[4],
-                "week_number": week,
-                "status": "unassigned",
-            }
-        )
-        if created:
-            #call agent first, so call doesnt depend on update_sheet success
-            run_agent_celery.delay(event_id, week)
-            update_sheet(info[0], info[3])
-            send_text(info[0], info[3])
+            _, created = Tour.objects.get_or_create(
+                event_id=event_id,
+                defaults={
+                    "start_dt": info[0],
+                    "end_dt": info[1],
+                    "number_of_guests": info[2],
+                    "group_tour": info[3],
+                    "guest_name": info[4],
+                    "week_number": week,
+                    "status": "unassigned",
+                }
+            )
+            if created:
+                #call agent first, so call doesnt depend on update_sheet success
+                run_agent_celery.delay(event_id, week)
+                update_sheet(info[0], info[3])
+                send_text(info[0], info[3])
+        except Exception as e:
+            print(f"failed to process event {event_id} ({info[4]}), error: {e}")
 
 @shared_task
 def run_agent_celery(event_id, week):
