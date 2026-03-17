@@ -48,13 +48,18 @@ def send_text(start_dt, group_tour):
     client = Client(account_sid, auth_token)
 
     for number in DOT_NUMBERS:
-        message = client.messages.create(
-         body=f"New group tour added to schedule at {time_str}" if group_tour else \
-                f"New tour added to schedule at {time_str}",
-            from_="+18773301601", 
-            to=number
-        )
-        print(message.sid)
+        try:
+            body=f"New group tour added to schedule" if group_tour else f"New tour added to schedule"
+            body += f" at {time_str}"
+            message = client.messages.create(
+                body=body,
+                from_="+16562700475", 
+                to=number,
+            )
+            print(message.sid)
+
+        except Exception as e:
+            print(f"failed to send message, error: {e}")
 
 
 ####Webscraper Function
@@ -163,9 +168,10 @@ def TourScraper():
             }
         )
         if created:
-            #send_text(info[0], info[3])
-            update_sheet(info[0], info[3])
+            #call agent first, so call doesnt depend on update_sheet success
             run_agent_celery.delay(event_id, week)
+            update_sheet(info[0], info[3])
+            send_text(info[0], info[3])
 
 @shared_task
 def run_agent_celery(event_id, week):

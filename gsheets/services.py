@@ -29,7 +29,7 @@ def update_sheet(tour_start_dt, is_group_tour):
 
     client = gspread.authorize(creds)
 
-    sheet_id = "1WE4y8-a7Zxb3dEuRp2hQ4O22JYqn9IJwFnB7Xq1ptes"
+    sheet_id = "1_rOWH5jgSI15TUSmzJ4MMtnqHqG5wdu1_K7AcjYT9MM"
 
     sheet = client.open_by_key(sheet_id)
 
