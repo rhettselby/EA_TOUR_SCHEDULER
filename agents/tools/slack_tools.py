@@ -87,7 +87,7 @@ def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_ur
 
         return {
             "status": "Message sent to slack channel",
-            "channel_id": {channel_id},
+            "channel_id": channel_id,
             "message": text
         }
 
