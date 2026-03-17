@@ -74,7 +74,8 @@ def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_ur
 
     try:
         text = (
-            f"<!channel> You have an upcoming tour on {week_day} (Week {week_number}). Please bold "
+            #f"<!channel> You have an upcoming tour on {week_day} (Week {week_number}). Please bold "
+            f"@channel (no ping for testing) You have an upcoming tour on {week_day} (Week {week_number}). Please bold"
             f"your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
             f"-- Rhett & Dani "
         )
