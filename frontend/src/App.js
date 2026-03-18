@@ -213,6 +213,10 @@ export default function App() {
     };
   };
 
+  console.log("weekKeys:", weekKeys);
+  console.log("activeWeek:", activeWeek);
+  console.log("grouped:", grouped);
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", background: "#f8fafc" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@600;700&family=DM+Mono&display=swap" rel="stylesheet" />

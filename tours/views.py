@@ -53,7 +53,7 @@ def tours_api(request):
     #Create two week zone starting at beginning of current week
     today = timezone.now().astimezone(pst)
     start_of_week = today - timedelta(days=today.weekday())
-    end_of_week = start_of_week + timedelta(days=14)
+    end_of_week = start_of_week + timedelta(days=21)
 
     #Django uses PST since we are passing timezone aware datetimes to filter
     tours = Tour.objects.filter(start_dt__gte=start_of_week, end_dt__lte=end_of_week).order_by('start_dt')
