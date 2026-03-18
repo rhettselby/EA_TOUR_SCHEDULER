@@ -48,6 +48,7 @@ def send_text(start_dt, group_tour):
     client = Client(account_sid, auth_token)
 
     for number in DOT_NUMBERS:
+        print(f"sending message to {number}")
         try:
             body=f"New group tour added to schedule" if group_tour else f"New tour added to schedule"
             body += f" at {time_str}"
@@ -171,7 +172,7 @@ def TourScraper():
             if created:
                 #call agent first, so call doesnt depend on update_sheet success
                 run_agent_celery.delay(event_id, week)
-                update_sheet(info[0], info[3])
+                #update_sheet(info[0], info[3])
                 send_text(info[0], info[3])
         except Exception as e:
             print(f"failed to process event {event_id} ({info[4]}), error: {e}")
