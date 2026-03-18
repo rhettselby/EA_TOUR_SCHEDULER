@@ -201,7 +201,7 @@ export default function App() {
       setActiveWeekIdx(idx >= 0 ? idx : 0);
       setInitialWeekSet(true);
     }
-  }, [loading]);
+  }, [loading, weekKeys.length]);
 
   const getWeekStats = (weekKey) => {
     const days = grouped[weekKey] || {};
