@@ -267,6 +267,7 @@ export default function App() {
   const activeWeek = weekKeys[activeWeekIdx];
   const activeWeekDays = activeWeek ? grouped[activeWeek] : {};
 
+  const todayKey = getDateKey(new Date());  // this line is missing
   const todayTours = tours.filter(t => getDateKey(t.start_dt) === todayKey);
   const totalToday = groupByStartTime(todayTours).length;
 
