@@ -72,7 +72,7 @@ def cancellations_api(events):
             #call notficy cancellation async
             notify_cancellation.delay(tour.event_id)
             count += 1
-    print (f"{count} tours")
+    print (f"{count}")
     
 
 

@@ -7,35 +7,80 @@ const STATUS_CONFIG = {
   past_event: { label: "Past Event", color: "#2d3748", bg: "#f7fafc", border: "#718096", light: "#e2e8f0" },
 };
 
+// --- Timezone-safe date utilities ---
+
 function formatTime(dt) {
   const d = new Date(dt);
-  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return d.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "America/Los_Angeles",
+  });
 }
 
 function formatDayHeader(dateStr) {
-  const d = new Date(dateStr + "T12:00:00");
-  return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  // dateStr is a UTC date key "YYYY-MM-DD", display in PST
+  const d = new Date(dateStr + "T00:00:00Z");
+  return d.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    timeZone: "America/Los_Angeles",
+  });
 }
 
 function getWeekLabel(weekStartStr) {
-  const d = new Date(weekStartStr + "T12:00:00");
+  const d = new Date(weekStartStr + "T00:00:00Z");
   const weekEnd = new Date(d);
-  weekEnd.setDate(d.getDate() + 6);
-  const fmt = (x) => x.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  weekEnd.setUTCDate(d.getUTCDate() + 6);
+  const fmt = (x) =>
+    x.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      timeZone: "America/Los_Angeles",
+    });
   return { short: `${fmt(d)} – ${fmt(weekEnd)}` };
 }
 
+// Bucket by UTC date to avoid timezone-shifting tours into wrong day
 function getDateKey(dt) {
   const d = new Date(dt);
-  return d.toLocaleDateString("en-CA");
+  return d.toISOString().slice(0, 10); // "YYYY-MM-DD" always UTC
 }
 
+// Week starts on Monday to match Django backend
 function getWeekKey(dt) {
   const d = new Date(dt);
+  const day = d.getUTCDay(); // 0 = Sunday
+  const diff = day === 0 ? 6 : day - 1; // Monday = 0
   const weekStart = new Date(d);
-  weekStart.setDate(d.getDate() - d.getDay());
-  return weekStart.toLocaleDateString("en-CA");
+  weekStart.setUTCDate(d.getUTCDate() - diff);
+  weekStart.setUTCHours(0, 0, 0, 0);
+  return weekStart.toISOString().slice(0, 10);
 }
+
+// Group tours with the same start_dt into one combined card
+function groupByStartTime(tours) {
+  const groups = {};
+  tours.forEach((tour) => {
+    const key = tour.start_dt;
+    if (!groups[key]) {
+      groups[key] = { ...tour, guests: [] };
+    }
+    // Collect guest names from all tours at this time
+    if (tour.guest_name && !groups[key].guests.includes(tour.guest_name)) {
+      groups[key].guests.push(tour.guest_name);
+    }
+    // Sum guest counts
+    if (groups[key].id !== tour.id) {
+      groups[key].number_of_guests += tour.number_of_guests;
+    }
+  });
+  return Object.values(groups).sort((a, b) => new Date(a.start_dt) - new Date(b.start_dt));
+}
+
+// --- Components ---
 
 function TourCard({ tour, onStatusChange }) {
   const [updating, setUpdating] = useState(false);
@@ -56,6 +101,9 @@ function TourCard({ tour, onStatusChange }) {
     setUpdating(false);
   };
 
+  const guestList = tour.guests && tour.guests.length > 0 ? tour.guests : [tour.guest_name || "Guest"];
+  const isGrouped = guestList.length > 1;
+
   return (
     <div style={{
       background: status.light,
@@ -70,18 +118,42 @@ function TourCard({ tour, onStatusChange }) {
       opacity: updating ? 0.6 : 1,
       transition: "opacity 0.2s",
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-        <div>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: "20px", flex: 1 }}>
+        <div style={{ flex: 1 }}>
           <div style={{ fontSize: "13px", color: status.color, fontFamily: "'DM Mono', monospace", letterSpacing: "0.05em", fontWeight: "600" }}>
             {formatTime(tour.start_dt)}
           </div>
-          <div style={{ fontSize: "16px", fontWeight: "600", color: "#1a202c", marginTop: "2px", fontFamily: "'Playfair Display', serif" }}>
-            {tour.guest_name || "Guest"}
-          </div>
-          <div style={{ display: "flex", gap: "8px", marginTop: "6px", alignItems: "center" }}>
+
+          {/* Guest names — stacked if multiple */}
+          {isGrouped ? (
+            <div style={{ marginTop: "4px" }}>
+              {guestList.map((name, idx) => (
+                <div key={idx} style={{
+                  fontSize: "15px",
+                  fontWeight: idx === 0 ? "600" : "400",
+                  color: idx === 0 ? "#1a202c" : "#4a5568",
+                  fontFamily: "'Playfair Display', serif",
+                  lineHeight: "1.4",
+                }}>
+                  {name}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ fontSize: "16px", fontWeight: "600", color: "#1a202c", marginTop: "2px", fontFamily: "'Playfair Display', serif" }}>
+              {guestList[0]}
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: "8px", marginTop: "6px", alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ fontSize: "12px", color: "#4a5568", background: "rgba(255,255,255,0.7)", border: "1px solid rgba(0,0,0,0.08)", borderRadius: "4px", padding: "2px 8px" }}>
               {tour.number_of_guests} {tour.number_of_guests === 1 ? "guest" : "guests"}
             </span>
+            {isGrouped && (
+              <span style={{ fontSize: "12px", color: "#2b6cb0", background: "rgba(255,255,255,0.7)", border: "1px solid #90cdf4", borderRadius: "4px", padding: "2px 8px" }}>
+                {guestList.length} groups
+              </span>
+            )}
             {tour.group_tour && (
               <span style={{ fontSize: "12px", color: "#553c9a", background: "rgba(255,255,255,0.7)", border: "1px solid #d6bcfa", borderRadius: "4px", padding: "2px 8px" }}>
                 Group Tour
@@ -93,7 +165,8 @@ function TourCard({ tour, onStatusChange }) {
           </div>
         </div>
       </div>
-      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+
+      <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0, marginLeft: "16px" }}>
         {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
           <button
             key={key}
@@ -141,12 +214,15 @@ function CircleArrowButton({ onClick, disabled, direction }) {
   );
 }
 
+// --- Main App ---
+
 export default function App() {
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeWeekIdx, setActiveWeekIdx] = useState(0);
   const [scraping, setScraping] = useState(false);
   const [scrapeMessage, setScrapeMessage] = useState(null);
+  const [initialWeekSet, setInitialWeekSet] = useState(false);
 
   useEffect(() => {
     fetch("/api/tours/")
@@ -177,6 +253,7 @@ export default function App() {
     setTimeout(() => setScrapeMessage(null), 4000);
   };
 
+  // Group tours into weeks -> days
   const grouped = {};
   tours.forEach((tour) => {
     const wk = getWeekKey(tour.start_dt);
@@ -193,7 +270,6 @@ export default function App() {
   const todayKey = getDateKey(new Date());
   const totalToday = tours.filter(t => getDateKey(t.start_dt) === todayKey).length;
 
-  const [initialWeekSet, setInitialWeekSet] = useState(false);
   useEffect(() => {
     if (!loading && !initialWeekSet && weekKeys.length > 0) {
       const todayWk = getWeekKey(new Date());
@@ -212,10 +288,6 @@ export default function App() {
       confirmed: allTours.filter(t => t.status === "confirmed").length,
     };
   };
-
-  console.log("weekKeys:", weekKeys);
-  console.log("activeWeek:", activeWeek);
-  console.log("grouped:", grouped);
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", background: "#f8fafc" }}>
@@ -294,12 +366,12 @@ export default function App() {
       <div style={{ flex: 1, padding: "40px 48px", overflowY: "auto" }}>
         <div style={{ maxWidth: "860px" }}>
 
-          {/* Header with inline today's tours */}
+          {/* Header */}
           <div style={{ marginBottom: "32px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
             <div>
               <h1 style={{ fontSize: "28px", fontWeight: "700", fontFamily: "'Playfair Display', serif", color: "#0f172a", margin: 0 }}>Tour Schedule</h1>
               <p style={{ color: "#64748b", marginTop: "4px", fontSize: "14px", margin: "4px 0 0" }}>
-                {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "America/Los_Angeles" })}
               </p>
             </div>
             {!loading && (
@@ -338,25 +410,30 @@ export default function App() {
             );
           })()}
 
+          {/* Tour list */}
           {loading ? (
             <div style={{ color: "#94a3b8", fontSize: "15px" }}>Loading tours...</div>
           ) : weekKeys.length === 0 ? (
             <div style={{ color: "#94a3b8", fontSize: "15px" }}>No upcoming tours found.</div>
           ) : (
-            Object.keys(activeWeekDays).sort().map((dk) => (
-              <div key={dk} style={{ marginBottom: "28px" }}>
-                <div style={{ fontSize: "14px", fontWeight: "700", color: "#334155", marginBottom: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3b82f6" }} />
-                  {formatDayHeader(dk)}
-                  <span style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "400" }}>
-                    {activeWeekDays[dk].length} {activeWeekDays[dk].length === 1 ? "tour" : "tours"}
-                  </span>
+            Object.keys(activeWeekDays).sort().map((dk) => {
+              // Group tours at the same start time into one card
+              const groupedByTime = groupByStartTime(activeWeekDays[dk]);
+              return (
+                <div key={dk} style={{ marginBottom: "28px" }}>
+                  <div style={{ fontSize: "14px", fontWeight: "700", color: "#334155", marginBottom: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3b82f6" }} />
+                    {formatDayHeader(dk)}
+                    <span style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "400" }}>
+                      {groupedByTime.length} {groupedByTime.length === 1 ? "tour" : "tours"}
+                    </span>
+                  </div>
+                  {groupedByTime.map((tour) => (
+                    <TourCard key={tour.id} tour={tour} onStatusChange={handleStatusChange} />
+                  ))}
                 </div>
-                {activeWeekDays[dk].map((tour) => (
-                  <TourCard key={tour.id} tour={tour} onStatusChange={handleStatusChange} />
-                ))}
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
