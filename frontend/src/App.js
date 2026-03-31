@@ -267,8 +267,8 @@ export default function App() {
   const activeWeek = weekKeys[activeWeekIdx];
   const activeWeekDays = activeWeek ? grouped[activeWeek] : {};
 
-  const todayKey = getDateKey(new Date());
-  const totalToday = tours.filter(t => getDateKey(t.start_dt) === todayKey).length;
+  const todayTours = tours.filter(t => getDateKey(t.start_dt) === todayKey);
+  const totalToday = groupByStartTime(todayTours).length;
 
   useEffect(() => {
     if (!loading && !initialWeekSet && weekKeys.length > 0) {
@@ -280,14 +280,15 @@ export default function App() {
   }, [loading, weekKeys.length]);
 
   const getWeekStats = (weekKey) => {
-    const days = grouped[weekKey] || {};
-    const allTours = Object.values(days).flat();
-    return {
-      total: allTours.length,
-      needAttention: allTours.filter(t => t.status === "unassigned").length,
-      confirmed: allTours.filter(t => t.status === "confirmed").length,
-    };
+  const days = grouped[weekKey] || {};
+  // apply same grouping logic so multi-guest same-time tours count as 1
+  const allGrouped = Object.values(days).flatMap((dayTours) => groupByStartTime(dayTours));
+  return {
+    total: allGrouped.length,
+    needAttention: allGrouped.filter(t => t.status === "unassigned").length,
+    confirmed: allGrouped.filter(t => t.status === "confirmed").length,
   };
+};
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", background: "#f8fafc" }}>
