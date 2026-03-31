@@ -21,7 +21,6 @@ PASSWORD = os.environ.get('BOOKED_PASSWORD')
 #Ai Agent
 from agents.utils import run_agent
 import asyncio
-
 #moved chrome driver install outside of function so runs
 #once each time celery starts up, not every time it runs task
 CHROME_DRIVER_PATH = ChromeDriverManager().install()
@@ -61,6 +60,27 @@ def send_text(start_dt, group_tour):
 
         except Exception as e:
             print(f"failed to send message, error: {e}")
+
+##### Cancellation Function #####
+def cancellations_api(events):
+    active_tours = Tour.objects.exclude(status = "past_event")
+    count = 0
+    for tour in active_tours:
+        if tour.event_id not in events:
+            tour.status = "cancelled"
+            tour.save()
+            #call notficy cancellation async
+            notify_cancellation.delay(tour.event_id)
+            count += 1
+    print (f"{count} tours")
+    
+
+
+@shared_task
+def notify_cancellation(event_id):
+    tour = Tour.objects.get(event_id=event_id)
+    query = f"Notify guides that tour {event_id} on {tour.start_dt} has been cancelled"
+    asyncio.run_agent(query, event_id)
 
 
 ####Webscraper Function
@@ -174,8 +194,15 @@ def TourScraper():
                 run_agent_celery.delay(event_id, week)
                 update_sheet(info[0], info[3])
                 send_text(info[0], info[3])
+
         except Exception as e:
             print(f"failed to process event {event_id} ({info[4]}), error: {e}")
+    try:
+        #check each event_id in database still on website
+        cancellations_api(result.keys())
+
+    except Exception as e:
+        print(f"Failed to check for cancelled events: {e}")
 
 @shared_task
 def run_agent_celery(event_id, week):

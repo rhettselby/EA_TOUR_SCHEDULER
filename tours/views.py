@@ -91,12 +91,7 @@ def update_status(request, tour_id):
 @api_view(['POST'])
 def get_tours_api(request):
 
-    #last_run = cache.get('last_scraper_run')
-    #if last_run:
-        #return Response({"message": "Scraper was recently run, please wait"}, status=429)
-    
-    #cache.set('last_scraper_run', True, timeout=1800)# 30 min cooldown
-
     TourScraper.delay()
 
     return Response({"message": "OASA Tour Website Scraped"})
+

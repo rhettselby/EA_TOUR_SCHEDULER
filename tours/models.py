@@ -21,6 +21,7 @@ class Tour(models.Model):
         ('message_sent', 'Message Sent'),
         ('confirmed', 'Confirmed'),
         ('past_event', 'Past Event'),
+        ('cancelled', 'Tour Cancelled'),
     ]
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='unassigned')

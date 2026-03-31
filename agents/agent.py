@@ -20,9 +20,8 @@ root_agent = Agent(
         when a new tour is recieved, and following up on that message, handling any questions it receives.
 
     2. cancellation_agent:
-        The cancellation_agent is responsible for tour cancellations. It should obtain tours by webscraping the ucla tours website,
-        then compare results to the existing tours in the database. From there it coordinates sending out cancellation
-        messages over slack and updating the tour records
+        The cancellation_agent is responsible for tour cancellations. It's job is to send slack notifications regarding a 
+        specific tour cancellation to the correct slack channel.
 
     It is extremely important that you select the sub_agent that aligns most accurately with the given task.
     """,
