@@ -310,11 +310,14 @@ export default function App() {
 
   const getWeekStats = (weekKey) => {
     const days = grouped[weekKey] || {};
+    // Total = number of merged timeslot cards
     const allGrouped = Object.values(days).flatMap((dayTours) => groupByStartTime(dayTours));
+    // Status counts = raw individual tours so every tour is counted
+    const allRaw = Object.values(days).flat();
     return {
       total: allGrouped.length,
-      needAttention: allGrouped.filter(t => t.status === "unassigned").length,
-      confirmed: allGrouped.filter(t => t.status === "confirmed").length,
+      needAttention: allRaw.filter(t => t.status === "unassigned").length,
+      confirmed: allRaw.filter(t => t.status === "confirmed").length,
     };
   };
 
