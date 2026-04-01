@@ -1,4 +1,5 @@
 import os
+from zoneinfo import ZoneInfo
 from slack_sdk import WebClient
 from tours.models import Tour
 
@@ -58,7 +59,7 @@ CHANNEL_MAP = {
 
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1WE4y8-a7Zxb3dEuRp2hQ4O22JYqn9IJwFnB7Xq1ptes/edit?pli=1&gid=0#gid=0"
 
-def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_url: str) -> dict:
+def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_url: str, time: int) -> dict:
     """
     Send message to slack channel corresponding with given information to help coordinate tour"
     """
@@ -72,10 +73,16 @@ def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_ur
             "status": f"Skipped, tour during week {week_number} not in weeks 1-10"
         }
 
+    
+    pst = ZoneInfo("America/Los_Angeles")
+    time_pst = time.astimezone(pst)
+    time_str = time_pst.strftime("%-I:%M %p")  
+
+
     try:
         text = (
             #f"<!channel> You have an upcoming tour on {week_day} (Week {week_number}). Please bold "
-            f"@channel (no ping for testing) You have an upcoming tour on {week_day} (Week {week_number}). Please bold "
+            f"@channel (no ping for testing) You have an upcoming tour on {week_day} (Week {week_number}) at {time_str}. Please bold "
             f"your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
             f"-- Rhett & Dani "
         )
