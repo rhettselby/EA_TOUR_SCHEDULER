@@ -20,7 +20,6 @@ function formatTime(dt) {
 }
 
 function formatDayHeader(dateStr) {
-  // dateStr is a UTC date key "YYYY-MM-DD", display in PST
   const d = new Date(dateStr + "T00:00:00Z");
   return d.toLocaleDateString("en-US", {
     weekday: "long",
@@ -43,24 +42,23 @@ function getWeekLabel(weekStartStr) {
   return { short: `${fmt(d)} – ${fmt(weekEnd)}` };
 }
 
-// Bucket by UTC date to avoid timezone-shifting tours into wrong day
 function getDateKey(dt) {
   const d = new Date(dt);
-  return d.toISOString().slice(0, 10); // "YYYY-MM-DD" always UTC
+  return d.toISOString().slice(0, 10);
 }
 
-// Week starts on Monday to match Django backend
 function getWeekKey(dt) {
   const d = new Date(dt);
-  const day = d.getUTCDay(); // 0 = Sunday
-  const diff = day === 0 ? 6 : day - 1; // Monday = 0
+  const day = d.getUTCDay();
+  const diff = day === 0 ? 6 : day - 1;
   const weekStart = new Date(d);
   weekStart.setUTCDate(d.getUTCDate() - diff);
   weekStart.setUTCHours(0, 0, 0, 0);
   return weekStart.toISOString().slice(0, 10);
 }
 
-// Group tours with the same start_dt into one combined card
+// guest_name is now a JSON array from the backend.
+// Merge tours at the same start_dt into one card, combining their guest arrays.
 function groupByStartTime(tours) {
   const groups = {};
   tours.forEach((tour) => {
@@ -68,11 +66,14 @@ function groupByStartTime(tours) {
     if (!groups[key]) {
       groups[key] = { ...tour, guests: [] };
     }
-    // Collect guest names from all tours at this time
-    if (tour.guest_name && !groups[key].guests.includes(tour.guest_name)) {
-      groups[key].guests.push(tour.guest_name);
-    }
-    // Sum guest counts
+    // guest_name is a JSON array e.g. ["Alice Smith", "Bob Jones"]
+    const names = Array.isArray(tour.guest_name) ? tour.guest_name : [];
+    names.forEach((name) => {
+      if (name && !groups[key].guests.includes(name)) {
+        groups[key].guests.push(name);
+      }
+    });
+    // Sum guest counts for tours merged into this slot (skip the first one already copied)
     if (groups[key].id !== tour.id) {
       groups[key].number_of_guests += tour.number_of_guests;
     }
@@ -101,7 +102,9 @@ function TourCard({ tour, onStatusChange }) {
     setUpdating(false);
   };
 
-  const guestList = tour.guests && tour.guests.length > 0 ? tour.guests : [tour.guest_name || "Guest"];
+  // guests is already a deduplicated array built by groupByStartTime.
+  // Fall back gracefully if somehow empty.
+  const guestList = tour.guests && tour.guests.length > 0 ? tour.guests : ["Guest"];
   const isGrouped = guestList.length > 1;
 
   return (
@@ -253,7 +256,6 @@ export default function App() {
     setTimeout(() => setScrapeMessage(null), 4000);
   };
 
-  // Group tours into weeks -> days
   const grouped = {};
   tours.forEach((tour) => {
     const wk = getWeekKey(tour.start_dt);
@@ -267,7 +269,7 @@ export default function App() {
   const activeWeek = weekKeys[activeWeekIdx];
   const activeWeekDays = activeWeek ? grouped[activeWeek] : {};
 
-  const todayKey = getDateKey(new Date());  // this line is missing
+  const todayKey = getDateKey(new Date());
   const todayTours = tours.filter(t => getDateKey(t.start_dt) === todayKey);
   const totalToday = groupByStartTime(todayTours).length;
 
@@ -281,15 +283,14 @@ export default function App() {
   }, [loading, weekKeys.length]);
 
   const getWeekStats = (weekKey) => {
-  const days = grouped[weekKey] || {};
-  // apply same grouping logic so multi-guest same-time tours count as 1
-  const allGrouped = Object.values(days).flatMap((dayTours) => groupByStartTime(dayTours));
-  return {
-    total: allGrouped.length,
-    needAttention: allGrouped.filter(t => t.status === "unassigned").length,
-    confirmed: allGrouped.filter(t => t.status === "confirmed").length,
+    const days = grouped[weekKey] || {};
+    const allGrouped = Object.values(days).flatMap((dayTours) => groupByStartTime(dayTours));
+    return {
+      total: allGrouped.length,
+      needAttention: allGrouped.filter(t => t.status === "unassigned").length,
+      confirmed: allGrouped.filter(t => t.status === "confirmed").length,
+    };
   };
-};
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", background: "#f8fafc" }}>
@@ -419,7 +420,6 @@ export default function App() {
             <div style={{ color: "#94a3b8", fontSize: "15px" }}>No upcoming tours found.</div>
           ) : (
             Object.keys(activeWeekDays).sort().map((dk) => {
-              // Group tours at the same start time into one card
               const groupedByTime = groupByStartTime(activeWeekDays[dk]);
               return (
                 <div key={dk} style={{ marginBottom: "28px" }}>

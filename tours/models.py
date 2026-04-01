@@ -13,7 +13,7 @@ class Tour(models.Model):
     end_dt = models.DateTimeField()
     number_of_guests = models.PositiveIntegerField()
     group_tour = models.BooleanField(default=False)
-    guest_name = models.CharField(max_length=255, blank=True, null=True, default=None)
+    guest_name = models.JSONField(default=list, blank=True, null=True)
     week_number = models.PositiveIntegerField(null=True, blank=True)
 
     STATUS_CHOICES = [
