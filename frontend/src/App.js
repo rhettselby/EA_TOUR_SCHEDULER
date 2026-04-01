@@ -20,8 +20,8 @@ timeZone: "America/Los_Angeles",
 }
 
 function formatDayHeader(dateStr) {
-// dateStr is a UTC date key "YYYY-MM-DD", display in PST
-const d = new Date(dateStr + "T00:00:00Z");
+// Use T12:00:00 (local noon) so UTC offset never rolls the date back a day
+const d = new Date(dateStr + "T12:00:00");
 return d.toLocaleDateString("en-US", {
 weekday: "long",
 month: "long",
@@ -31,9 +31,9 @@ timeZone: "America/Los_Angeles",
 }
 
 function getWeekLabel(weekStartStr) {
-const d = new Date(weekStartStr + "T00:00:00Z");
-const weekEnd = new Date(d);
-weekEnd.setUTCDate(d.getUTCDate() + 6);
+const d = new Date(weekStartStr + "T12:00:00");
+const weekEnd = new Date(weekStartStr + "T12:00:00");
+weekEnd.setDate(weekEnd.getDate() + 6);
 const fmt = (x) =>
 x.toLocaleDateString("en-US", {
 month: "short",
@@ -43,21 +43,24 @@ timeZone: "America/Los_Angeles",
 return { short: `${fmt(d)} – ${fmt(weekEnd)}` };
 }
 
-// Bucket by UTC date to avoid timezone-shifting tours into wrong day
+// Bucket by PST date so tours aren't shifted into the wrong day
 function getDateKey(dt) {
 const d = new Date(dt);
-return d.toISOString().slice(0, 10); // "YYYY-MM-DD" always UTC
+return d.toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" }); // "YYYY-MM-DD" in PST
 }
 
-// Week starts on Monday to match Django backend
+// Week starts on Monday to match Django backend, keyed by PST date
 function getWeekKey(dt) {
-const d = new Date(dt);
-const day = d.getUTCDay(); // 0 = Sunday
+const dateKey = getDateKey(dt); // "YYYY-MM-DD" in PST
+const [y, m, d] = dateKey.split("-").map(Number);
+const date = new Date(y, m - 1, d); // local midnight, no UTC shift
+const day = date.getDay(); // 0 = Sunday
 const diff = day === 0 ? 6 : day - 1; // Monday = 0
-const weekStart = new Date(d);
-weekStart.setUTCDate(d.getUTCDate() - diff);
-weekStart.setUTCHours(0, 0, 0, 0);
-return weekStart.toISOString().slice(0, 10);
+date.setDate(date.getDate() - diff);
+const yy = date.getFullYear();
+const mm = String(date.getMonth() + 1).padStart(2, "0");
+const dd = String(date.getDate()).padStart(2, "0");
+return `${yy}-${mm}-${dd}`;
 }
 
 // guest_name is now a JSONField: an array of strings e.g. ["Alice", "Bob"]
