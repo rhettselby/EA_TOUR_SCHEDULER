@@ -43,20 +43,20 @@ timeZone: "America/Los_Angeles",
 return { short: `${fmt(d)} – ${fmt(weekEnd)}` };
 }
 
-// Bucket by UTC date to avoid timezone-shifting tours into wrong day
+// Bucket by PST/PDT date so tours aren't shifted into the wrong day
 function getDateKey(dt) {
 const d = new Date(dt);
-return d.toISOString().slice(0, 10); // "YYYY-MM-DD" always UTC
+return d.toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" }); // "YYYY-MM-DD" in PST
 }
 
-// Week starts on Monday to match Django backend
+// Week starts on Monday to match Django backend, using PST date
 function getWeekKey(dt) {
-const d = new Date(dt);
+const dateKey = getDateKey(dt); // "YYYY-MM-DD" in PST
+const d = new Date(dateKey + "T00:00:00Z"); // treat as UTC midnight for arithmetic
 const day = d.getUTCDay(); // 0 = Sunday
 const diff = day === 0 ? 6 : day - 1; // Monday = 0
 const weekStart = new Date(d);
 weekStart.setUTCDate(d.getUTCDate() - diff);
-weekStart.setUTCHours(0, 0, 0, 0);
 return weekStart.toISOString().slice(0, 10);
 }
 
