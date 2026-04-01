@@ -66,31 +66,10 @@ function getGuestNames(tour) {
   return [];
 }
 
-// Group tours with the same start_dt into one combined card.
-// The merged card tracks ALL ids so status updates hit every tour in the group.
-function groupByStartTime(tours) {
-  const groups = {};
-  tours.forEach((tour) => {
-    const key = tour.start_dt;
-    if (!groups[key]) {
-      groups[key] = { ...tour, guests: [], ids: [] };
-    }
-    // Track every id in this time slot
-    if (!groups[key].ids.includes(tour.id)) {
-      groups[key].ids.push(tour.id);
-    }
-    // Accumulate guest names
-    getGuestNames(tour).forEach((name) => {
-      if (name && !groups[key].guests.includes(name)) {
-        groups[key].guests.push(name);
-      }
-    });
-    // Sum guest counts for tours beyond the first
-    if (groups[key].id !== tour.id) {
-      groups[key].number_of_guests += tour.number_of_guests;
-    }
-  });
-  return Object.values(groups).sort((a, b) => new Date(a.start_dt) - new Date(b.start_dt));
+// Sort tours by start time — no merging needed since each DB record is already
+// one tour with all guests in the guest_name JSONField.
+function sortTours(tours) {
+  return [...tours].sort((a, b) => new Date(a.start_dt) - new Date(b.start_dt));
 }
 
 // --- Components ---
@@ -101,31 +80,21 @@ function TourCard({ tour, onStatusChange }) {
 
   const handleStatus = async (newStatus) => {
     setUpdating(true);
-    // Update every tour id in the group
-    const ids = tour.ids && tour.ids.length > 0 ? tour.ids : [tour.id];
     try {
-      await Promise.all(
-        ids.map((id) =>
-          fetch(`/api/tours/${id}/update_status/`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: newStatus }),
-          })
-        )
-      );
-      onStatusChange(ids, newStatus);
+      await fetch(`/api/tours/${tour.id}/update_status/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      onStatusChange(tour.id, newStatus);
     } catch (e) {
       console.error("Failed to update status", e);
     }
     setUpdating(false);
   };
 
-  const guestList =
-    tour.guests && tour.guests.length > 0
-      ? tour.guests
-      : getGuestNames(tour).length > 0
-      ? getGuestNames(tour)
-      : ["Guest"];
+  // guest_name is a JSONField array on the single tour record
+  const guestList = getGuestNames(tour).length > 0 ? getGuestNames(tour) : ["Guest"];
 
   const isGrouped = guestList.length > 1;
 
@@ -255,12 +224,8 @@ export default function App() {
       .catch(() => setLoading(false));
   }, []);
 
-  // Now accepts an array of ids so grouped tours all update together
-  const handleStatusChange = (ids, newStatus) => {
-    const idSet = Array.isArray(ids) ? ids : [ids];
-    setTours((prev) =>
-      prev.map((t) => idSet.includes(t.id) ? { ...t, status: newStatus } : t)
-    );
+  const handleStatusChange = (id, newStatus) => {
+    setTours((prev) => prev.map((t) => t.id === id ? { ...t, status: newStatus } : t));
   };
 
   const handleLoadTours = async () => {
@@ -297,7 +262,7 @@ export default function App() {
 
   const todayKey = getDateKey(new Date());
   const todayTours = tours.filter(t => getDateKey(t.start_dt) === todayKey);
-  const totalToday = groupByStartTime(todayTours).length;
+  const totalToday = sortTours(todayTours).length;
 
   useEffect(() => {
     if (!loading && !initialWeekSet && weekKeys.length > 0) {
@@ -309,15 +274,11 @@ export default function App() {
   }, [loading, weekKeys.length]);
 
   const getWeekStats = (weekKey) => {
-    const days = grouped[weekKey] || {};
-    // Total = number of merged timeslot cards
-    const allGrouped = Object.values(days).flatMap((dayTours) => groupByStartTime(dayTours));
-    // Status counts = raw individual tours so every tour is counted
-    const allRaw = Object.values(days).flat();
+    const allTours = Object.values(grouped[weekKey] || {}).flat();
     return {
-      total: allGrouped.length,
-      needAttention: allRaw.filter(t => t.status === "unassigned").length,
-      confirmed: allRaw.filter(t => t.status === "confirmed").length,
+      total: allTours.length,
+      needAttention: allTours.filter(t => t.status === "unassigned").length,
+      confirmed: allTours.filter(t => t.status === "confirmed").length,
     };
   };
 
@@ -449,7 +410,7 @@ export default function App() {
             <div style={{ color: "#94a3b8", fontSize: "15px" }}>No upcoming tours found.</div>
           ) : (
             Object.keys(activeWeekDays).sort().map((dk) => {
-              const groupedByTime = groupByStartTime(activeWeekDays[dk]);
+              const groupedByTime = sortTours(activeWeekDays[dk]);
               return (
                 <div key={dk} style={{ marginBottom: "28px" }}>
                   <div style={{ fontSize: "14px", fontWeight: "700", color: "#334155", marginBottom: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
