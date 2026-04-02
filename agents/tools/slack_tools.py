@@ -152,6 +152,7 @@ def update_tour_status(event_id: str, status: str) -> dict:
             "status": f"Tour with event_id {event_id} not found"
         }
     except Exception as e:
+        print(e)
         return {
             "status": "Failed to update tour status",
             "error": str(e)
