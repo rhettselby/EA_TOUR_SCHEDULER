@@ -127,7 +127,7 @@ def get_channel_id(week_day:str, time: int) -> dict:
             #}
     
     return {
-        "channel_id": "C0AKSD2DQ06",
+        "channel_id": "C0APWBP4TH8",
         "Status": "Retrieved development channel id"
     }
     
