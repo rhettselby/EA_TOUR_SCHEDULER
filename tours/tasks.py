@@ -160,10 +160,17 @@ def TourScraper():
             #tour already found
             if event_id in result:
                 result[event_id][2] += 1
+                Tour.objects.filter(event_id=event_id).update(
+                    number_of_guests=result[event_id][2],
+                )
             #same time as existing tour
             elif existing:
                 result[existing][2] += 1
                 result[existing][4].append(guest_name)
+                Tour.objects.filter(event_id=existing).update(
+                    number_of_guests=result[existing][2],
+                    guest_name=result[existing][4],
+                )
             #found new tour
             else:
                 result[event_id] = [start_dt, end_dt, 1, group_tour, [guest_name]]
@@ -200,7 +207,8 @@ def TourScraper():
             print(f"failed to process event {event_id} ({info[4]}), error: {e}")
     try:
         #check each event_id in database still on website
-        cancellations_api(result.keys())
+        #cancellations_api(result.keys())
+        print("cancellation agent disabled")
 
     except Exception as e:
         print(f"Failed to check for cancelled events: {e}")
