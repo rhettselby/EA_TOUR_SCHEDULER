@@ -14,7 +14,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from dotenv import load_dotenv
 load_dotenv()
-from .models import Tour
+from .models import Guest, Tour
 from gsheets.services import update_sheet
 USERNAME = os.environ.get('BOOKED_USERNAME')
 PASSWORD = os.environ.get('BOOKED_PASSWORD')
@@ -72,7 +72,7 @@ def cancellations_api(events):
             #call notficy cancellation async
             notify_cancellation.delay(tour.event_id)
             count += 1
-    print (f"{count}")
+    print (f"{count} tours")
     
 
 
@@ -155,25 +155,17 @@ def TourScraper():
             guest_name = event.get_text(strip=True)
 
             # def next (iterator, default):
-            existing = next((id for id, info in result.items() if info[0] == start_dt and id != event_id and guest_name not in info[4]), None)
+            existing = next((id for id, info in result.items() if info[0] == start_dt and info[4] == guest_name), None)
 
             #tour already found
             if event_id in result:
                 result[event_id][2] += 1
-                Tour.objects.filter(event_id=event_id).update(
-                    number_of_guests=result[event_id][2],
-                )
-            #same time as existing tour
+            #same time + guest name as existing tour
             elif existing:
                 result[existing][2] += 1
-                result[existing][4].append(guest_name)
-                Tour.objects.filter(event_id=existing).update(
-                    number_of_guests=result[existing][2],
-                    guest_name=result[existing][4],
-                )
             #found new tour
             else:
-                result[event_id] = [start_dt, end_dt, 1, group_tour, [guest_name]]
+                result[event_id] = [start_dt, end_dt, 1, group_tour, guest_name]
 
     for event_id, info in result.items():
         try:
@@ -185,7 +177,7 @@ def TourScraper():
             days = (info[0] - quarter_start_dt).days
             week = days // 7 + 1
 
-            _, created = Tour.objects.get_or_create(
+            _, created_guest = Guest.objects.get_or_create(
                 event_id=event_id,
                 defaults={
                     "start_dt": info[0],
@@ -194,21 +186,43 @@ def TourScraper():
                     "group_tour": info[3],
                     "guest_name": info[4],
                     "week_number": week,
-                    "status": "unassigned",
                 }
             )
-            if created:
-                #call agent first, so call doesnt depend on update_sheet success
-                run_agent_celery.delay(event_id, week)
-                update_sheet(info[0], info[3])
-                send_text(info[0], info[3])
+            # New Guest Created
+            if created_guest:
+
+                tour, created_tour = Tour.objects.get_or_create(
+                    start_dt = info[0],
+                    defaults={
+                    "event_id" : [event_id],
+                    "end_dt": info[1],
+                    "number_of_guests": info[2],
+                    "group_tour": info[3],
+                    "guest_name": [info[4]],
+                    "week_number": week,
+                    }
+                )
+
+                # Tour already exists
+                if not created_tour:
+                    tour.event_id.append(event_id)
+                    tour.guest_name.append(info[4])
+                    tour.number_of_guests += info[2] 
+                    tour.save()
+                
+                #New Tour created
+                else:
+                    #call agent first, so call doesnt depend on update_sheet success
+                    run_agent_celery.delay(event_id, week)
+                    update_sheet(info[0], info[3])
+                    send_text(info[0], info[3])
 
         except Exception as e:
             print(f"failed to process event {event_id} ({info[4]}), error: {e}")
     try:
         #check each event_id in database still on website
         #cancellations_api(result.keys())
-        print("cancellation agent disabled")
+        print("disabled cancellation for now")
 
     except Exception as e:
         print(f"Failed to check for cancelled events: {e}")
@@ -228,4 +242,3 @@ def run_agent_celery(event_id, week):
 
     query = f"Handle this incoming tour with week_day: {week_day}, time: {hour}, week_number: {week}, event_id: {event_id}, and status: unassigned. Delegate work to slack_agent"
     asyncio.run(run_agent(query, event_id))
-

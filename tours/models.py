@@ -29,3 +29,14 @@ class Tour(models.Model):
 
     def __str__(self):
         return f"{self.start_dt} to {self.end_dt}"
+    
+
+class Guest(models.Model):
+    event_id = models.CharField(unique=True, max_length=255)
+    start_dt = models.DateTimeField()
+    end_dt = models.DateTimeField()
+    number_of_guests = models.PostiveIntegerField()
+    group_tour = models.BooleanField(default=False)
+    guest_name = models.CharField()
+    week_number = models.PositiveIntegerField(null=True, blank=True)
+    
