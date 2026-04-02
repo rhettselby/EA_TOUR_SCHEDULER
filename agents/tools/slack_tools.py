@@ -95,6 +95,7 @@ def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_ur
         }
 
     except Exception as e:
+        print("Failed to send message" + e)
         return {
             "status": "Failed to send message",
             "error": str(e),
@@ -152,7 +153,7 @@ def update_tour_status(event_id: str, status: str) -> dict:
             "status": f"Tour with event_id {event_id} not found"
         }
     except Exception as e:
-        print(e)
+        print("failed to send update sheet" + e)
         return {
             "status": "Failed to update tour status",
             "error": str(e)
