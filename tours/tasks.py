@@ -234,10 +234,11 @@ def run_agent_celery(event_id, week):
     #convert to PST
     pst = ZoneInfo("America/Los_Angeles")
     start_dt_pst = tour.start_dt.astimezone(pst)
+    time_str = start_dt_pst.strftime("%-I:%M %p")
 
     #extract day + hour
     week_day = start_dt_pst.strftime('%A')
     
 
-    query = f"Handle this incoming tour with week_day: {week_day}, time: {start_dt_pst}, week_number: {week}, event_id: {event_id}, and status: unassigned. Delegate work to slack_agent"
+    query = f"Handle this incoming tour with week_day: {week_day}, time: {time_str}, week_number: {week}, event_id: {event_id}, and status: unassigned. Delegate work to slack_agent"
     asyncio.run(run_agent(query, event_id))
