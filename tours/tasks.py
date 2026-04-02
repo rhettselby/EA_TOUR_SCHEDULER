@@ -194,7 +194,7 @@ def TourScraper():
                 tour, created_tour = Tour.objects.get_or_create(
                     start_dt = info[0],
                     defaults={
-                    "event_id" : [event_id],
+                    "event_id" : event_id,
                     "end_dt": info[1],
                     "number_of_guests": info[2],
                     "group_tour": info[3],
@@ -203,7 +203,7 @@ def TourScraper():
                     }
                 )
 
-                # Tour already exists
+                # Tour already exists, add new Guest to tour
                 if not created_tour:
                     tour.guest_name.append(info[4])
                     tour.number_of_guests += info[2] 
