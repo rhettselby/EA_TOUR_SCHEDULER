@@ -72,17 +72,13 @@ def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_ur
         return {
             "status": f"Skipped, tour during week {week_number} not in weeks 1-10"
         }
-
     
-    pst = ZoneInfo("America/Los_Angeles")
-    time_pst = time.astimezone(pst)
-    time_str = time_pst.strftime("%-I:%M %p")  
-
+    #Note time should already be passed in PST string format
 
     try:
         text = (
             #f"<!channel> You have an upcoming tour on {week_day} (Week {week_number}). Please bold "
-            f"@channel (no ping for testing) You have an upcoming tour on {week_day} (Week {week_number}) at {time_str}. Please bold "
+            f"@channel (no ping for testing) You have an upcoming tour on {week_day} (Week {week_number}) at {time}. Please bold "
             f"your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
             f"-- Rhett & Dani "
         )
