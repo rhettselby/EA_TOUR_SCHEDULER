@@ -205,7 +205,6 @@ def TourScraper():
 
                 # Tour already exists
                 if not created_tour:
-                    tour.event_id.append(event_id)
                     tour.guest_name.append(info[4])
                     tour.number_of_guests += info[2] 
                     tour.save()
