@@ -155,7 +155,7 @@ def TourScraper():
             guest_name = event.get_text(strip=True)
 
             # def next (iterator, default):
-            existing = next((id for id, info in result.items() if info[0] == start_dt and id != event_id), None)
+            existing = next((id for id, info in result.items() if info[0] == start_dt and id != event_id and guest_name not in info[4]), None)
 
             #tour already found
             if event_id in result:
