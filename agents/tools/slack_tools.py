@@ -124,7 +124,7 @@ def get_channel_id(week_day:str, time: int) -> dict:
             #}
     
     return {
-        "channel_id": "C0APWBP4TH8",
+        "channel_id": "C0AKSD2DQ06",
         "Status": "Retrieved development channel id"
     }
     
@@ -135,6 +135,7 @@ def update_tour_status(event_id: str, status: str) -> dict:
     #debug
     print(f"updating tour status {event_id}")
     try:
+        #must wrap database calls with sync_to_async when making them inside a function that runs async
         tour = Tour.objects.get(event_id = event_id)
         old_status = tour.status
         tour.status = status
