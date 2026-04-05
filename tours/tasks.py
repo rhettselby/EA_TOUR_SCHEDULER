@@ -82,7 +82,6 @@ def cancellations_api(events):
 
             #No other guests in tour
             if not names:        
-                tour.status = "cancelled"
                 #call notficy cancellation async
                 start_dt = tour.start_dt
                 pst = pytz.timezone('America/Los_Angeles')
@@ -90,7 +89,11 @@ def cancellations_api(events):
                 time_str = start_dt_pst.strftime("%-I:%M %p")
                 notify_cancellation.delay(tour.event_id, guest.guest_name, time_str, tour.week_number)
                 count += 1
-            tour.save()
+                tour.delete()
+            else:
+                tour.save()
+            
+            guest.delete()
 
     print (f"{count} tours cancelled")
     
