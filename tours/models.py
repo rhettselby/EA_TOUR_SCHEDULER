@@ -39,4 +39,11 @@ class Guest(models.Model):
     group_tour = models.BooleanField(default=False)
     guest_name = models.CharField()
     week_number = models.PositiveIntegerField(null=True, blank=True)
+    tour = models.ForeignKey(Tour, on_delete=models.SET_NULL, null=True, blank=True, default=None)
+    past_event = models.BooleanField(default=False)
+
+   
+
+
+    
     

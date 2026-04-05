@@ -5,6 +5,7 @@ from datetime import timezone
 import time
 import os
 from bs4 import BeautifulSoup
+import pytz
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -63,25 +64,46 @@ def send_text(start_dt, group_tour):
 
 ##### Cancellation Function #####
 def cancellations_api(events):
-    active_tours = Tour.objects.exclude(status = "past_event")
+    active_guests = Guest.objects.exclude(past_event=True, group_tour = True)
     count = 0
-    for tour in active_tours:
-        if tour.event_id not in events:
-            tour.status = "cancelled"
+    for guest in active_guests:
+        if guest.event_id not in events and guest.past_event == False and guest.group_tour == False:
+
+            tour = guest.tour
+            if not tour:
+                continue
+
+            #remove guest from tour
+            names = tour.guest_name
+            if guest.guest_name not in tour.guest_name:
+                continue
+            names.remove(guest.guest_name)
+            tour.guest_name = names
+
+            #No other guests in tour
+            if not names:        
+                tour.status = "cancelled"
+                #call notficy cancellation async
+                start_dt = tour.start_dt
+                pst = pytz.timezone('America/Los_Angeles')
+                start_dt_pst = start_dt.astimezone(pst)
+                time_str = start_dt_pst.strftime("%-I:%M %p")
+                notify_cancellation.delay(tour.event_id, guest.guest_name, time_str, tour.week_number)
+                count += 1
             tour.save()
-            #call notficy cancellation async
-            notify_cancellation.delay(tour.event_id)
-            count += 1
-    print (f"{count} tours")
+
+    print (f"{count} tours cancelled")
     
 
 
 @shared_task
-def notify_cancellation(event_id):
-    tour = Tour.objects.get(event_id=event_id)
-    query = f"Notify guides that tour {event_id} on {tour.start_dt} has been cancelled"
-    asyncio.run_agent(query, event_id)
+def notify_cancellation(event_id, guest_name, time_str, week_number):
 
+    query = f"""Notify guides that tour {event_id} at {time_str} during week {week_number} has been cancelled for {guest_name}. Please
+    handle this cancellation by delegating to the cancellation agent and providing the event_id, time, week number, and guest name.
+    """
+    asyncio.run(run_agent(query, event_id))
+    
 
 ####Webscraper Function
 
@@ -177,7 +199,7 @@ def TourScraper():
             days = (info[0] - quarter_start_dt).days
             week = days // 7 + 1
 
-            _, created_guest = Guest.objects.get_or_create(
+            guest, created_guest = Guest.objects.get_or_create(
                 event_id=event_id,
                 defaults={
                     "start_dt": info[0],
@@ -186,6 +208,7 @@ def TourScraper():
                     "group_tour": info[3],
                     "guest_name": info[4],
                     "week_number": week,
+                    "tour": None,
                 }
             )
             # New Guest Created
@@ -208,6 +231,7 @@ def TourScraper():
                     tour.guest_name.append(info[4])
                     tour.number_of_guests += info[2] 
                     tour.save()
+    
                 
                 #New Tour created
                 else:
@@ -215,13 +239,16 @@ def TourScraper():
                     run_agent_celery.delay(event_id, week)
                     update_sheet(info[0], info[3])
                     send_text(info[0], info[3])
+                
+                guest.tour = tour
+                guest.save()
 
         except Exception as e:
             print(f"failed to process event {event_id} ({info[4]}), error: {e}")
     try:
         #check each event_id in database still on website
-        #cancellations_api(result.keys())
-        print("disabled cancellation for now")
+        cancellations_api(result.keys())
+        #print("disabled cancellation for now")
 
     except Exception as e:
         print(f"Failed to check for cancelled events: {e}")
