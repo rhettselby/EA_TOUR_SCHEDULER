@@ -64,39 +64,42 @@ def send_text(start_dt, group_tour):
 
 ##### Cancellation Function #####
 def cancellations_api(events):
-    active_guests = Guest.objects.exclude(past_event=True, group_tour = True)
-    count = 0
-    for guest in active_guests:
-        if guest.event_id not in events and guest.past_event == False and guest.group_tour == False:
+    try:
+        active_guests = Guest.objects.exclude(past_event=True, group_tour = True)
+        count = 0
+        for guest in active_guests:
+            if guest.event_id not in events and guest.past_event == False and guest.group_tour == False:
 
-            tour = guest.tour
-            if not tour:
-                continue
+                tour = guest.tour
+                if not tour:
+                    continue
 
-            #remove guest from tour
-            names = tour.guest_name
-            if guest.guest_name not in tour.guest_name:
-                continue
-            names.remove(guest.guest_name)
-            tour.guest_name = names
+                #remove guest from tour
+                names = tour.guest_name
+                if guest.guest_name in tour.guest_name:
+                    names.remove(guest.guest_name)
+                tour.guest_name = names
 
-            #No other guests in tour
-            if not names:        
-                #call notficy cancellation async
-                start_dt = tour.start_dt
-                pst = pytz.timezone('America/Los_Angeles')
-                start_dt_pst = start_dt.astimezone(pst)
-                time_str = start_dt_pst.strftime("%-I:%M %p")
-                notify_cancellation.delay(tour.event_id, guest.guest_name, time_str, tour.week_number)
-                count += 1
-                tour.delete()
-            else:
-                tour.save()
-            
-            guest.delete()
+                #No other guests in tour
+                if not names:        
+                    #call notficy cancellation async
+                    start_dt = tour.start_dt
+                    pst = pytz.timezone('America/Los_Angeles')
+                    start_dt_pst = start_dt.astimezone(pst)
+                    time_str = start_dt_pst.strftime("%-I:%M %p")
+                    notify_cancellation.delay(tour.event_id, guest.guest_name, time_str, tour.week_number)
+                    count += 1
+                    tour.delete()
+                else:
+                    tour.save()
+                
+                guest.delete()
 
-    print (f"{count} tours cancelled")
-    
+        print (f"{count} tours cancelled")
+
+    except Exception as e:
+        print(f"Error cancelling tour: {e}")
+        
 
 
 @shared_task
