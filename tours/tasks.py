@@ -243,6 +243,7 @@ def TourScraper():
                 guest.tour = tour
                 guest.save()
 
+
         except Exception as e:
             print(f"failed to process event {event_id} ({info[4]}), error: {e}")
     try:
