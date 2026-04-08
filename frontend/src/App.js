@@ -7,20 +7,35 @@ const STATUS = {
   past_event:    { label: "Past Event",    color: "#2d3748", bg: "#f7fafc", border: "#718096", light: "#e2e8f0" },
 };
 
-// Parse backend datetime strings as wall-clock (backend already converts to PST)
-function parseLocal(dtStr) {
-  return new Date(dtStr.replace(/([+-]\d{2}:\d{2}|Z)$/, ""));
+// The backend already converts datetimes to PST before serializing.
+// We always read them in the "America/Los_Angeles" timezone so the
+// correct wall-clock values are used regardless of the user's machine timezone.
+const TZ = "America/Los_Angeles";
+
+function pstParts(dtStr) {
+  // Returns { year, month, day, hour, minute } in PST/PDT wall-clock time
+  const d = new Date(dtStr); // parsed correctly when offset is present (e.g. -07:00)
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: TZ,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(d);
+  const get = type => parts.find(p => p.type === type)?.value;
+  return {
+    year: Number(get("year")), month: Number(get("month")), day: Number(get("day")),
+    hour: Number(get("hour")), minute: Number(get("minute")),
+  };
 }
 
 function formatTime(dtStr) {
-  const d = parseLocal(dtStr);
-  const h = d.getHours(), m = d.getMinutes();
-  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
+  const { hour, minute } = pstParts(dtStr);
+  const h = hour % 24; // guard against Intl returning 24
+  return `${h % 12 || 12}:${String(minute).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
 }
 
 function toDateKey(dtStr) {
-  const d = parseLocal(dtStr);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const { year, month, day } = pstParts(dtStr);
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
 function toMondayKey(dateKey) {
@@ -46,7 +61,7 @@ function weekLabel(mondayKey) {
 
 // Use Intl to get today's date in PST/PDT correctly
 function todayPST() {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" }); // en-CA gives YYYY-MM-DD
+  return new Date().toLocaleDateString("en-CA", { timeZone: TZ }); // en-CA gives YYYY-MM-DD
 }
 
 // Group tours: { weekKey: { dateKey: [tours] } }
@@ -270,7 +285,7 @@ export default function App() {
             <div>
               <h1 style={{ fontSize: 28, fontWeight: 700, fontFamily: "'Playfair Display',serif", color: "#0f172a", margin: 0 }}>Tour Schedule</h1>
               <p style={{ color: "#64748b", fontSize: 14, margin: "4px 0 0" }}>
-                {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "America/Los_Angeles" })}
+                {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: TZ })}
               </p>
             </div>
             {!loading && (
@@ -309,7 +324,7 @@ export default function App() {
             <div style={{ color: "#94a3b8", fontSize: 15 }}>No upcoming tours found.</div>
           ) : (
             Object.keys(weekDays).sort().map(dk => {
-              const dayTours = [...weekDays[dk]].sort((a, b) => parseLocal(a.start_dt) - parseLocal(b.start_dt));
+              const dayTours = [...weekDays[dk]].sort((a, b) => new Date(a.start_dt) - new Date(b.start_dt));
               return (
                 <div key={dk} style={{ marginBottom: 28 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: "#334155", marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
