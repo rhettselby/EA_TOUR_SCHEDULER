@@ -86,8 +86,9 @@ def cancellations_api(events):
                     start_dt = tour.start_dt
                     pst = pytz.timezone('America/Los_Angeles')
                     start_dt_pst = start_dt.astimezone(pst)
+                    week_day = start_dt_pst.strftime("%A")
                     time_str = start_dt_pst.strftime("%-I:%M %p")
-                    notify_cancellation.delay(tour.event_id, guest.guest_name, time_str, tour.week_number)
+                    notify_cancellation.delay(tour.event_id, guest.guest_name, time_str, tour.week_number, week_day)
                     count += 1
                     tour.delete()
                 else:
@@ -103,10 +104,10 @@ def cancellations_api(events):
 
 
 @shared_task
-def notify_cancellation(event_id, guest_name, time_str, week_number):
+def notify_cancellation(event_id, guest_name, time_str, week_number, week_day):
 
-    query = f"""Notify guides that tour {event_id} at {time_str} during week {week_number} has been cancelled for {guest_name}. Please
-    handle this cancellation by delegating to the cancellation agent and providing the event_id, time, week number, and guest name.
+    query = f"""Notify guides that tour {event_id} at {time_str} on {week_day} during week {week_number} has been cancelled for {guest_name}. Please
+    handle this cancellation by delegating to the cancellation agent and providing the event_id, time, week number, guest name, and week day.
     """
     asyncio.run(run_agent(query, event_id))
     
