@@ -65,13 +65,19 @@ def send_text(start_dt, group_tour):
 ##### Cancellation Function #####
 def cancellations_api(events):
     try:
-        active_guests = Guest.objects.exclude(past_event=True, group_tour = True)
+        active_guests = Guest.objects.filter(past_event=False, group_tour = False)
         count = 0
         for guest in active_guests:
             if guest.event_id not in events and guest.past_event == False and guest.group_tour == False:
 
+                #check if tour exists for this guest
                 tour = guest.tour
                 if not tour:
+                    continue
+                
+                #logic to fix same day cancellations bug (compares using UTC)
+                start_dt = tour.start_dt
+                if start_dt < timezone.now():
                     continue
 
                 #remove guest from tour
@@ -83,7 +89,6 @@ def cancellations_api(events):
                 #No other guests in tour
                 if not names:        
                     #call notficy cancellation async
-                    start_dt = tour.start_dt
                     pst = pytz.timezone('America/Los_Angeles')
                     start_dt_pst = start_dt.astimezone(pst)
                     week_day = start_dt_pst.strftime("%A")
