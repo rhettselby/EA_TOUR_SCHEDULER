@@ -25,6 +25,7 @@ import asyncio
 #moved chrome driver install outside of function so runs
 #once each time celery starts up, not every time it runs task
 CHROME_DRIVER_PATH = ChromeDriverManager().install()
+from django.utils import timezone as dj_timezone 
 
 
 from twilio.rest import Client
@@ -73,11 +74,13 @@ def cancellations_api(events):
                 #check if tour exists for this guest
                 tour = guest.tour
                 if not tour:
+                    print("Tour not found")
                     continue
                 
                 #logic to fix same day cancellations bug (compares using UTC)
                 start_dt = tour.start_dt
-                if start_dt < timezone.now():
+                if start_dt < dj_timezone.now():
+                    print("Unable to cancell past event")
                     continue
 
                 #remove guest from tour
