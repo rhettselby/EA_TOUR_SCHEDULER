@@ -66,10 +66,10 @@ def send_text(start_dt, group_tour):
 ##### Cancellation Function #####
 def cancellations_api(events):
     try:
-        active_guests = Guest.objects.filter(past_event=False, group_tour = False)
+        active_guests = Guest.objects.exclude(past_event=True)
         count = 0
         for guest in active_guests:
-            if guest.event_id not in events and guest.past_event == False and guest.group_tour == False:
+            if guest.event_id not in events and guest.group_tour == False:
 
                 #check if tour exists for this guest
                 tour = guest.tour
