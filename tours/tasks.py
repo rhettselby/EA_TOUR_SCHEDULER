@@ -292,3 +292,16 @@ def run_agent_celery(event_id, week):
 
     query = f"Handle this incoming tour with week_day: {week_day}, time: {time_str}, week_number: {week}, event_id: {event_id}, and status: unassigned. Delegate work to slack_agent"
     asyncio.run(run_agent(query, event_id))
+
+
+
+@shared_task
+def mark_past_tours():
+    now = datetime.now(tz=timezone.utc)
+    guest_count = Guest.objects.filter(past_event=False, start_dt__lt=now).update(past_event=True)
+    tour_count = Tour.objects.filter(past_event=False, start_dt__lt=now).update(past_event=True)
+
+    print(f"{guest_count} guests and {tour_count} tours updated to past events")
+
+    
+
