@@ -299,7 +299,7 @@ def run_agent_celery(event_id, week):
 def mark_past_tours():
     now = datetime.now(tz=timezone.utc)
     guest_count = Guest.objects.filter(past_event=False, start_dt__lt=now).update(past_event=True)
-    tour_count = Tour.objects.exclude(status="past_event", start_dt__lt=now).update(status="past_event")
+    tour_count = Tour.objects.exclude(status="past_event").filter(start_dt__lt=now).update(status="past_event")
 
     print(f"{guest_count} guests and {tour_count} tours updated to past events")
 
