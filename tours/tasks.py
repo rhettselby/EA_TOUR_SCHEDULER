@@ -74,23 +74,25 @@ def cancellations_api(events):
                 #check if tour exists for this guest
                 tour = guest.tour
                 if not tour:
-                    print("Tour not found")
+                    print(f"Tour not found for {guest.guest_name}")
                     continue
                 
                 #logic to fix same day cancellations bug (compares using UTC)
                 start_dt = tour.start_dt
                 if start_dt < dj_timezone.now():
-                    print("Unable to cancell past event")
+                    print(f"Unable to cancell past event for {tour.guest_name}")
                     continue
 
                 #remove guest from tour
                 names = tour.guest_name
                 if guest.guest_name in tour.guest_name:
                     names.remove(guest.guest_name)
+                    print(f"removed {guest.guest_name} from tour {tour.event_id}")
                 tour.guest_name = names
 
                 #No other guests in tour
-                if not names:        
+                if not names:  
+                    print(f"Tour {tour.event_id} cancelled")      
                     #call notficy cancellation async
                     pst = pytz.timezone('America/Los_Angeles')
                     start_dt_pst = start_dt.astimezone(pst)
