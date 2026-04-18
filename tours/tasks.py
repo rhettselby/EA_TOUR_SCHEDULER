@@ -206,6 +206,8 @@ def TourScraper():
             else:
                 result[event_id] = [start_dt, end_dt, 1, group_tour, guest_name]
 
+    guest_count = 0
+    tour_count = 0
     for event_id, info in result.items():
         try:
             if info[3]:
@@ -230,7 +232,7 @@ def TourScraper():
             )
             # New Guest Created
             if created_guest:
-
+                guest_count += 1
                 tour, created_tour = Tour.objects.get_or_create(
                     start_dt = info[0],
                     defaults={
@@ -252,6 +254,7 @@ def TourScraper():
                 
                 #New Tour created
                 else:
+                    tour_count += 1
                     #call agent first, so call doesnt depend on update_sheet success
                     run_agent_celery.delay(event_id, week)
                     update_sheet(info[0], info[3])
@@ -263,6 +266,8 @@ def TourScraper():
 
         except Exception as e:
             print(f"failed to process event {event_id} ({info[4]}), error: {e}")
+    
+    print(f"{guest_count} new guests, {tour_count} new tours.")
     try:
         #check each event_id in database still on website
         cancellations_api(result.keys())
