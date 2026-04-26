@@ -3,7 +3,7 @@ import os
 from google.adk.runners import Runner
 #persistence
 from google.adk.sessions import DatabaseSessionService
-from .agent import root_agent
+from .agent import root_agent, root_agent_fallback
 from google.genai import types
 
 
@@ -73,13 +73,24 @@ async def run_agent(query, event_id="DEFAULT"):
         )
         SESSION_ID = new_session.id
     
+
     #runner
-    runner = Runner(
-        agent = root_agent,
-        app_name = APP_NAME,
-        session_service = session_service
-    )
+    try:
+        runner = Runner(
+            agent = root_agent,
+            app_name = APP_NAME,
+            session_service = session_service
+        )
 
-    #call agent with runner + session + query
-    await call_agent_async(runner, USER_ID, SESSION_ID, query)
+        #call agent with runner + session + query
+        await call_agent_async(runner, USER_ID, SESSION_ID, query)
 
+    except Exception as e:
+        print("Fall back model activated")
+        runner = Runner(
+            agent = root_agent_fallback,
+            app_name = APP_NAME,
+            session_service = session_service,
+        )
+
+        await call_agent_async(runner, USER_ID, SESSION_ID, query)
