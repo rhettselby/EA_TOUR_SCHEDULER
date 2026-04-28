@@ -11,6 +11,7 @@ anthropic==0.97.0
 anyio==4.12.1
 asgiref==3.11.1
 async-generator==1.10
+asyncpg==0.31.0
 attrs==25.4.0
 Authlib==1.6.9
 beautifulsoup4==4.14.3
