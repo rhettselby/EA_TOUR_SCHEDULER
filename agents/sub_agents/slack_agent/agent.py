@@ -3,7 +3,7 @@ from agents.tools.slack_tools import send_slack_message, get_channel_id, update_
 from google.adk.models.lite_llm import LiteLlm
 
 slack_agent = Agent(
-    model=LiteLlm(model="claude-sonnet-4-20250514"),
+    model=LiteLlm(model="claude-sonnet-4-6"),
     name='slack_agent',
     description= """sends slack tour message and updates the specified tour's status in 
     the django database""",

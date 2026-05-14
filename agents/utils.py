@@ -51,7 +51,7 @@ async def run_agent(query, event_id="DEFAULT"):
 
     session_service = DatabaseSessionService(db_url=db_url)
     initial_state = {
-    "name": "Rhett",
+    "problem_id": "Rhett",
     }
 
     existing_sessions = await session_service.list_sessions(

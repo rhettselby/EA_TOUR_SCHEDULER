@@ -5,7 +5,7 @@ from .sub_agents.cancellation_agent.agent import cancellation_agent, cancellatio
 from google.adk.models.lite_llm import LiteLlm
 
 root_agent = Agent(
-    model=LiteLlm(model="claude-sonnet-4-20250514"),
+    model=LiteLlm(model="claude-sonnet-4-6"),
     name='root_agent',
     description= "Routes incoming tasks to the appropriate sub-agent",
 
