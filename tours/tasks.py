@@ -99,6 +99,7 @@ def cancellations_api(events):
                     week_day = start_dt_pst.strftime("%A")
                     time_str = start_dt_pst.strftime("%-I:%M %p")
                     notify_cancellation.delay(tour.event_id, guest.guest_name, time_str, tour.week_number, week_day)
+                    update_sheet(start_dt, False, True)
                     count += 1
                     tour.delete()
                 else:
@@ -257,8 +258,8 @@ def TourScraper():
                     tour_count += 1
                     #call agent first, so call doesnt depend on update_sheet success
                     run_agent_celery.delay(event_id, week)
-                    update_sheet(info[0], info[3])
-                    send_text(info[0], info[3])
+                    update_sheet(info[0], info[3], False)
+                    #send_text(info[0], info[3])
                 
                 guest.tour = tour
                 guest.save()
@@ -271,7 +272,6 @@ def TourScraper():
     try:
         #check each event_id in database still on website
         cancellations_api(result.keys())
-        #print("disabled cancellation for now")
 
     except Exception as e:
         print(f"Failed to check for cancelled events: {e}")

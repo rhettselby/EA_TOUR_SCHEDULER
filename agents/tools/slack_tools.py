@@ -127,36 +127,34 @@ def get_channel_id(week_day:str, time: int) -> dict:
         "channel_id": "C0AKSD2DQ06",
         "Status": "Retrieved development channel id"
     }
-from asgiref.sync import sync_to_async
-
-async def update_tour_status(event_id: str, status: str) -> dict:
+    
+def update_tour_status(event_id: str, status: str) -> dict:
     """
     Update the tour status for a given tour in the django model database
     """
+    #debug
     print(f"updating tour status {event_id}")
     try:
-        def _db_update():
-            tour = Tour.objects.get(event_id=event_id)
-            old_status = tour.status
-            tour.status = status
-            tour.save(update_fields=['status'])
-            return old_status
-
-        old_status = await sync_to_async(_db_update)()
+        #must wrap database calls with sync_to_async when making them inside a function that runs async
+        tour = Tour.objects.get(event_id = event_id)
+        old_status = tour.status
+        tour.status = status
+        tour.save(update_fields=['status'])
 
         return {
             "status": "updated tour status",
             "old_status": old_status,
             "new_status": status,
         }
-
+    
     except Tour.DoesNotExist:
+        #debug
         print(f"Tour {event_id} not found.")
         return {
             "status": f"Tour with event_id {event_id} not found"
         }
     except Exception as e:
-        print("failed to update tour status: " + str(e))
+        print("failed to send update sheet" + str(e))
         return {
             "status": "Failed to update tour status",
             "error": str(e)
