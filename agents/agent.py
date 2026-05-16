@@ -1,7 +1,7 @@
 
 from google.adk.agents.llm_agent import Agent
-from .sub_agents.slack_agent.agent import slack_agent, slack_agent_fallback
-from .sub_agents.cancellation_agent.agent import cancellation_agent, cancellation_agent_fallback
+from .sub_agents.slack_agent.agent import slack_agent
+from .sub_agents.cancellation_agent.agent import cancellation_agent
 from google.adk.models.lite_llm import LiteLlm
 
 root_agent = Agent(
