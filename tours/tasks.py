@@ -301,7 +301,7 @@ def mark_past_tours():
     guest_count = Guest.objects.filter(past_event=False, start_dt__lt=now).update(past_event=True)
     tour_count = Tour.objects.exclude(status="past_event").filter(start_dt__lt=now).update(status="past_event")
 
-    print(f"{guest_count} guests and {tour_count} tours updated to past events")
+    #print(f"{guest_count} guests and {tour_count} tours updated to past events")
 
     
 
