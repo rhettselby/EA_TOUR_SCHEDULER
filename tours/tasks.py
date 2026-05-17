@@ -190,32 +190,31 @@ def TourScraper():
             end_ts = int(event.get("data-end"))
             start_dt = datetime.fromtimestamp(start_ts, tz=timezone.utc)
             end_dt = datetime.fromtimestamp(end_ts, tz=timezone.utc)
-            event_id = event.get("data-resid")
+            event_id = f"{event.get('data-resid')}_{start_ts}"
             group_tour = 'Group Tour' in event.get_text(strip=True)
+            if group_tour:
+                event_id = f"Group_tour_at_{start_ts}"
             guest_name = event.get_text(strip=True)
 
-            # def next (iterator, default):
-            existing = next((id for id, info in result.items() if info[0] == start_dt and info[4] == guest_name), None)
+            # def next (iterator, default): (unnecessary after adding start_dt to event_id)
+            #existing = next((id for id, info in result.items() if info[0] == start_dt and info[4] == guest_name), None)
 
             #tour already found
             if event_id in result:
                 result[event_id][2] += 1
             #same time + guest name as existing tour
-            elif existing:
-                result[existing][2] += 1
+            #elif existing:
+                #result[existing][2] += 1
             #found new tour
             else:
                 result[event_id] = [start_dt, end_dt, 1, group_tour, guest_name]
 
     guest_count = 0
     tour_count = 0
+    #determine week number
+    quarter_start_dt = datetime.strptime(quarter_start, '%Y-%m-%d').replace(tzinfo=timezone.utc)
     for event_id, info in result.items():
         try:
-            if info[3]:
-                event_id = f"GROUP_TOUR at_{info[0]}"
-
-            #determine week number
-            quarter_start_dt = datetime.strptime(quarter_start, '%Y-%m-%d').replace(tzinfo=timezone.utc)
             days = (info[0] - quarter_start_dt).days
             week = days // 7 + 1
 
