@@ -18,8 +18,10 @@ def slack_events(request):
 
     # Step 1: Handle Slack's one-time challenge verification
     if data.get('type') == 'url_verification':
+        print('sending challenge')
         return HttpResponse(data.get('challenge'), content_type="text/plain", status=200)
 
+    print('moving past challenge')
     # Step 2: Ignore bot messages to prevent infinite loop
     event = data.get('event', {})
     if event.get('bot_id'):
