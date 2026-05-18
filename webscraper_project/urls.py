@@ -22,4 +22,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/tours/', include('tours.urls')),
     re_path(r'^.*$', serve_react, name="serve_react"),
+    path('api/agents/', include('agents.urls')),
 ]

@@ -277,7 +277,7 @@ def TourScraper():
 
 @shared_task
 def run_agent_celery(event_id, week):
-
+    
     tour = Tour.objects.get(event_id=event_id)
     
     #convert to PST

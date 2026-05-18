@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'gsheets',
     'rest_framework',
     'corsheaders',
+    'agents',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
