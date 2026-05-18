@@ -17,6 +17,7 @@ quarter_start = os.environ.get("QUARTER_START_DATE")
 from asgiref.sync import sync_to_async
 
 async def update_sheet(tour_start_dt, is_group_tour, cancellation):
+    print("Update sheet called")
 
     def _update():
         ##### Sheet set up #####
@@ -64,13 +65,15 @@ async def update_sheet(tour_start_dt, is_group_tour, cancellation):
         A1_range = A1_top + ":" + A1_bottom
 
         if not cancellation:
+            print("Google Sheet background updated for tour")
             if is_group_tour:
                 color = {"red": 1, "green": 0.9490196, "blue": 0.8}
             else:
                 color = {"red": 0.7882353, "green": 0.85490197, "blue": 0.972549}
-        
+
             worksheet.format(A1_range, {"backgroundColor": color})
         else:
+            print("Google Sheet background removed for cancellation")
             worksheet.format(A1_range, {"backgroundColor": {"red": 1, "green": 1, "blue": 1}})
             
     await sync_to_async(_update)()
