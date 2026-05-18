@@ -1,5 +1,5 @@
 import json
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from tours.models import Tour, Guest
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
@@ -18,7 +18,7 @@ def slack_events(request):
     # Step 1: Handle Slack's one-time challenge verification
     if data.get('type') == 'url_verification':
         print('sending challenge')
-        return HttpResponse(data.get('challenge'), content_type="text/plain", status=200)
+        return JsonResponse({'challenge': data.get('challenge')})
 
     print('moving past challenge')
     # Step 2: Ignore bot messages to prevent infinite loop
