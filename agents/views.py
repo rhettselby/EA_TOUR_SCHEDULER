@@ -1,13 +1,18 @@
 from tours.models import Tour, Guest
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from .tasks import run_slack_agent
+from rest_framework.permissions import AllowAny
+from django.views.decorators.csrf import csrf_exempt
 
 
 
 
 
+@csrf_exempt
 @api_view(['POST'])
+@authentication_classes([])
+@permission_classes([AllowAny])
 def slack_events(request):
     data = request.data
 
@@ -27,6 +32,6 @@ def slack_events(request):
         ts = event.get('ts')
         
         # Step 4: Fire off async task and return 200 immediately
-        handle_slack_message.delay(channel, text, ts)
+        run_slack_agent.delay(channel, text, ts)
 
     return Response(status=200)
