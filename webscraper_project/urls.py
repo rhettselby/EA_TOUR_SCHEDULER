@@ -21,6 +21,7 @@ from .views import render_home, serve_react
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/tours/', include('tours.urls')),
-    re_path(r'^.*$', serve_react, name="serve_react"),
     path('api/agents/', include('agents.urls')),
+    #catch all url, must be at bottom of paths
+    re_path(r'^.*$', serve_react, name="serve_react"),
 ]
