@@ -1,20 +1,22 @@
+import json
 from django.http import HttpResponse
 from tours.models import Tour, Guest
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from .tasks import run_slack_agent
 from rest_framework.permissions import AllowAny
+from django.views.decorators import csrf_exempt
 
 
 
 
 
-
+@csrf_exempt
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([AllowAny])
 def slack_events(request):
-    data = request.data
+    data = json.loads(request.body)
 
     # Step 1: Handle Slack's one-time challenge verification
     if data.get('type') == 'url_verification':
