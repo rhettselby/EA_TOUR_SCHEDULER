@@ -13,26 +13,29 @@ from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 def slack_events(request):
-    data = json.loads(request.body)
+    try:
+        data = json.loads(request.body)
 
-    # Step 1: Handle Slack's one-time challenge verification
-    if data.get('type') == 'url_verification':
-        print('sending challenge')
-        return JsonResponse({'challenge': data.get('challenge')})
+        # Step 1: Handle Slack's one-time challenge verification
+        if data.get('type') == 'url_verification':
+            print('sending challenge')
+            return JsonResponse({'challenge': data.get('challenge')})
 
-    print('moving past challenge')
-    # Step 2: Ignore bot messages to prevent infinite loop
-    event = data.get('event', {})
-    if event.get('bot_id'):
+        print('moving past challenge')
+        # Step 2: Ignore bot messages to prevent infinite loop
+        event = data.get('event', {})
+        if event.get('bot_id'):
+            return Response(status=200)
+
+        # Step 3: Only handle actual messages
+        if event.get('type') == 'message':
+            channel = event.get('channel')
+            text = event.get('text')
+            ts = event.get('ts')
+            
+            # Step 4: Fire off async task and return 200 immediately
+            run_slack_agent.delay(channel, text, ts)
+
         return Response(status=200)
-
-    # Step 3: Only handle actual messages
-    if event.get('type') == 'message':
-        channel = event.get('channel')
-        text = event.get('text')
-        ts = event.get('ts')
-        
-        # Step 4: Fire off async task and return 200 immediately
-        run_slack_agent.delay(channel, text, ts)
-
-    return Response(status=200)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status = 500)
