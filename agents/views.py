@@ -4,13 +4,12 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.response import Response
 from .tasks import run_slack_agent
 from rest_framework.permissions import AllowAny
-from django.views.decorators.csrf import csrf_exempt
 
 
 
 
 
-@csrf_exempt
+
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([AllowAny])
@@ -19,7 +18,7 @@ def slack_events(request):
 
     # Step 1: Handle Slack's one-time challenge verification
     if data.get('type') == 'url_verification':
-        return HttpResponse(data.get('challenge'), content_type="text/plain")
+        return HttpResponse(data.get('challenge'), content_type="text/plain", status=200)
 
     # Step 2: Ignore bot messages to prevent infinite loop
     event = data.get('event', {})
