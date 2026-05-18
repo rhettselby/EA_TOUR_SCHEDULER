@@ -5,14 +5,13 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.response import Response
 from .tasks import run_slack_agent
 from rest_framework.permissions import AllowAny
+from django.views.decorators.csrf import csrf_exempt
 
 
 
 
 
-@api_view(['POST'])
-@authentication_classes([])
-@permission_classes([AllowAny])
+@csrf_exempt
 def slack_events(request):
     data = json.loads(request.body)
 
