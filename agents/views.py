@@ -36,7 +36,7 @@ def slack_events(request):
             # Step 4: Fire off async task and return 200 immediately
             run_slack_agent.delay(channel, text, ts)
 
-        return Response(status=200)
+        return JsonResponse(status=200)
     except Exception as e:
         print(str(e))
         return JsonResponse({"error": str(e)}, status = 500)
