@@ -199,3 +199,17 @@ def get_sheet_url(week_number: int) -> dict:
             "status": "Failed to obtain google sheet url",
             "error": str(e),
         }
+    
+
+def reply_to_slack_message(channel_id: str, text: str) -> dict:
+    """
+    Reply to a message in a slack channel with the given text
+    """
+    try:
+        slack_client.chat_postMessage(
+            channel=channel_id,
+            text=text
+        )
+        return {"status": "Message sent", "channel_id": channel_id}
+    except Exception as e:
+        return {"status": "Failed", "error": str(e)}

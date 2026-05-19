@@ -1,5 +1,5 @@
 from google.adk.agents.llm_agent import Agent
-from agents.tools.slack_tools import send_slack_message, get_channel_id, update_tour_status, get_sheet_url
+from agents.tools.slack_tools import reply_to_slack_message, send_slack_message, get_channel_id, update_tour_status, get_sheet_url
 from google.adk.models.lite_llm import LiteLlm
 
 slack_agent = Agent(
@@ -11,8 +11,9 @@ slack_agent = Agent(
     instruction = """
 
     As the slack_agent your responsibility is to handle the tour's that you are given with three
-    main responsibilities. Always call all four Tours tools in order for every new tour, regardless of
-    previous interactions.
+    main responsibilities. Always call all four of the first Tours tools in order for every new tour, regardless of
+    previous interactions. Your second responsibility is to respond to general messages in the slack channels. For these messages you
+    should use the fifth tool (reply_to_slack_messages).
 
     1. Obtain the slack channel id for the corresponding slack channel, given a tour's
     day of the week (Monday-Friday) and its time(9am - 4pm) that you extract from the query.
@@ -39,7 +40,12 @@ slack_agent = Agent(
     update_tour_status with "unassigned". The update status should reflect whether the slack message
     was sent successfuly. If the message was sent, then update status to "message_sent", otherwise update/keep
     the status to "unassigned"
+
+    5. (FOR GENERAL REPLIES ONLY) To reply to general messages in slack, you should receive the channel id from the promopt, and use that channel
+    id in your call to reply_to_slack_message in order to send a message in that channel. Please respond to each message in a professional tone, 
+    as the goal is still to coordinate tours. 
     """,
 
-    tools=[send_slack_message, get_channel_id, update_tour_status, get_sheet_url],
+
+    tools=[send_slack_message, get_channel_id, update_tour_status, get_sheet_url, reply_to_slack_message],
 )

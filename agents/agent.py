@@ -18,8 +18,7 @@ root_agent = Agent(
     1. slack_agent:
         The slack agent is responsible for sending messages in the engineering ambassador slack channel in order
         to coordinate tour assignment within the club. This includes sending an initial message to the appropriate channel 
-        when a new tour is recieved, and following up on that message, handling any questions it receives.
-
+        when a new tour is recieved, and following up on that message, as well as replying to general messages in channels.
     2. cancellation_agent:
         The cancellation_agent is responsible for tour cancellations. It's job is to send slack notifications regarding a 
         specific tour cancellation to the correct slack channel.
