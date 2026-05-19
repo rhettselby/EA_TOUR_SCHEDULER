@@ -25,7 +25,7 @@ def slack_events(request):
         # Step 2: Ignore bot messages to prevent infinite loop
         event = data.get('event', {})
         if event.get('bot_id'):
-            return Response(status=200)
+            return JsonResponse(status=200)
 
         # Step 3: Only handle actual messages
         if event.get('type') == 'message':
