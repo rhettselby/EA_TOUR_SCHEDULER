@@ -25,7 +25,7 @@ def slack_events(request):
         # Step 2: Ignore bot messages to prevent infinite loop
         event = data.get('event', {})
         if event.get('bot_id'):
-            return JsonResponse(status=200)
+            return JsonResponse({"error": "avoing response to slack bots message"}, status = 405)
 
         # Step 3: Only handle actual messages
         if event.get('type') == 'message':
@@ -36,7 +36,7 @@ def slack_events(request):
             # Step 4: Fire off async task and return 200 immediately
             run_slack_agent.delay(channel, text, ts)
 
-        return JsonResponse(status=200)
+        return JsonResponse({"message": "slack agent called successfuly"}, status = 200)
     except Exception as e:
         print(str(e))
         return JsonResponse({"error": str(e)}, status = 500)
