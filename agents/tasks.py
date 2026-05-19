@@ -1,5 +1,6 @@
 import asyncio
 from celery import shared_task
+from rich import _console
 from agents.utils import run_agent
 from tours.models import Tour
 
@@ -12,3 +13,4 @@ def run_slack_agent(channel, text, time_stamp):
         asyncio.run(run_agent(query, channel))
     except Exception as e:
         print(str(e))
+

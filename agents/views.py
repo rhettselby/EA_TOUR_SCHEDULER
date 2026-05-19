@@ -38,4 +38,5 @@ def slack_events(request):
 
         return Response(status=200)
     except Exception as e:
+        print(str(e))
         return JsonResponse({"error": str(e)}, status = 500)
