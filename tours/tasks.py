@@ -196,15 +196,14 @@ def TourScraper():
                 event_id = f"Group_tour_at_{start_ts}"
             guest_name = event.get_text(strip=True)
 
-            # def next (iterator, default): (unnecessary after adding start_dt to event_id)
-            #existing = next((id for id, info in result.items() if info[0] == start_dt and info[4] == guest_name), None)
+            existing = next((id for id, info in result.items() if info[0] == start_dt and info[4] == guest_name), None)
 
             #tour already found
             if event_id in result:
                 result[event_id][2] += 1
             #same time + guest name as existing tour
-            #elif existing:
-                #result[existing][2] += 1
+            elif existing:
+                result[existing][2] += 1
             #found new tour
             else:
                 result[event_id] = [start_dt, end_dt, 1, group_tour, guest_name]
