@@ -1,4 +1,5 @@
 import os
+import concurrent.futures
 from zoneinfo import ZoneInfo
 from slack_sdk import WebClient
 from tours.models import Tour
@@ -132,29 +133,35 @@ def update_tour_status(event_id: str, status: str) -> dict:
     """
     Update the tour status for a given tour in the django model database
     """
-    #debug
     print(f"updating tour status {event_id}")
     try:
-        #must wrap database calls with sync_to_async when making them inside a function that runs async
-        tour = Tour.objects.get(event_id = event_id)
-        old_status = tour.status
-        tour.status = status
-        tour.save(update_fields=['status'])
+        # Django ORM raises SynchronousOnlyOperation when called from within
+        # an async context (e.g. asyncio.run inside a Celery task). Running in
+        # a ThreadPoolExecutor gives us a plain thread with no event loop, so
+        # Django's check passes cleanly.
+        def _db_ops():
+            tour = Tour.objects.get(event_id=event_id)
+            old_status = tour.status
+            tour.status = status
+            tour.save(update_fields=['status'])
+            return old_status
+
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            old_status = pool.submit(_db_ops).result()
 
         return {
             "status": "updated tour status",
             "old_status": old_status,
             "new_status": status,
         }
-    
+
     except Tour.DoesNotExist:
-        #debug
         print(f"Tour {event_id} not found.")
         return {
             "status": f"Tour with event_id {event_id} not found"
         }
     except Exception as e:
-        print("failed to send update sheet" + str(e))
+        print(f"failed to update tour status: {e}")
         return {
             "status": "Failed to update tour status",
             "error": str(e)

@@ -99,7 +99,7 @@ def cancellations_api(events):
                     week_day = start_dt_pst.strftime("%A")
                     time_str = start_dt_pst.strftime("%-I:%M %p")
                     notify_cancellation.delay(tour.event_id, guest.guest_name, time_str, tour.week_number, week_day)
-                    update_sheet(start_dt, False, True)
+                    asyncio.run(update_sheet(start_dt, False, True))
                     count += 1
                     tour.delete()
                 else:
@@ -134,12 +134,16 @@ def TourScraper():
         options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--disable-extensions")
+        options.add_argument("--window-size=1920,1080")
         options.binary_location = "/usr/bin/google-chrome"
 
         driver = webdriver.Chrome(
             service=Service(CHROME_DRIVER_PATH),
             options=options
         )
+        driver.set_page_load_timeout(60)
         driver.get(OASA_website)
 
         for char in USERNAME:
@@ -175,7 +179,8 @@ def TourScraper():
 
     #ensure driver always quits
     finally:
-        driver.quit()
+        if 'driver' in locals():
+            driver.quit()
 
     soup = BeautifulSoup(current_week_html, 'lxml')
     tours = [e for e in soup.find_all('div', class_="reserved") if 'past' not in e.get('class', [])]
@@ -258,7 +263,7 @@ def TourScraper():
                     tour_count += 1
                     #call agent first, so call doesnt depend on update_sheet success
                     run_agent_celery.delay(event_id, week)
-                    update_sheet(info[0], info[3], False)
+                    asyncio.run(update_sheet(info[0], info[3], False))
                     #send_text(info[0], info[3])
                 
                 guest.tour = tour
