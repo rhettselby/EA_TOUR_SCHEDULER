@@ -166,7 +166,7 @@ def TourScraper():
             print("PAGE SOURCE:", driver.page_source[:1000])
             return
 
-        tour_schedule_website = 'https://tours.engineering.ucla.edu/Web/schedule.php?dv=7'
+        tour_schedule_website = 'https://tours.engineering.ucla.edu/Web/schedule.php?dv=10'
         driver.get(tour_schedule_website)
 
         WebDriverWait(driver, 30).until(
