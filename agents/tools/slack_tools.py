@@ -111,23 +111,19 @@ def get_channel_id(week_day:str, time: int) -> dict:
     """
     print(f"getting channel _id")
 
-    #try:
-       # key = week_day + "_" + str(time)
-        #channel_id = CHANNEL_MAP[key]
-        #return {
-            #"channel_id": channel_id,
-            #"status": "retrieved channel id",
-        #}
+    try:
+        key = week_day + "_" + str(time)
+        channel_id = CHANNEL_MAP[key]
+        return {
+            "channel_id": channel_id,
+            "status": "retrieved channel id",
+        }
     
-    #except Exception as e:
-       # return {
-            #"status": "Unable to retrive channel id",
-            #}
-    
-    return {
-        "channel_id": "C0AKSD2DQ06",
-        "Status": "Retrieved development channel id"
-    }
+    except Exception as e:
+       return {
+           "channel_id": "C0AKSD2DQ06",
+            "status": "Unable to retrive channel id",
+            }
     
 def update_tour_status(event_id: str, status: str) -> dict:
     """

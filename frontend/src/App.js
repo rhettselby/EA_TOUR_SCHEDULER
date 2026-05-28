@@ -81,6 +81,25 @@ function NavBtn({ onClick, disabled, dir }) {
   );
 }
 
+function DeleteBtn({ onClick, disabled }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <button onClick={onClick} disabled={disabled}
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      title="Delete tour"
+      style={{ height: 30, minWidth: 30, borderRadius: 6, outline: "none", display: "flex", alignItems: "center", justifyContent: "center",
+        gap: 4, padding: hov ? "0 10px" : "0",
+        background: hov ? "#fee2e2" : "#fff",
+        border: `2px solid ${hov ? "#fca5a5" : "#e2e8f0"}`,
+        color: hov ? "#b91c1c" : "#1a202c",
+        fontSize: hov ? 12 : 14, fontWeight: 700,
+        cursor: disabled ? "default" : "pointer",
+        transition: "all 0.15s", flexShrink: 0, overflow: "hidden", whiteSpace: "nowrap" }}>
+      ✕{hov && <span style={{ fontSize: 11, fontWeight: 600 }}>delete</span>}
+    </button>
+  );
+}
+
 function TourCard({ tour, onStatusChange, onDelete }) {
   const [updating, setUpdating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -153,12 +172,7 @@ function TourCard({ tour, onStatusChange, onDelete }) {
         </div>
 
         {/* Delete button */}
-        <button onClick={() => setConfirmDelete(true)} disabled={updating || confirmDelete} title="Delete tour"
-          style={{ width: 30, height: 30, borderRadius: "50%", outline: "none", display: "flex", alignItems: "center", justifyContent: "center",
-            background: confirmDelete ? "#fecdd3" : "#fff", border: `2px solid ${confirmDelete ? "#fda4af" : "#e2e8f0"}`,
-            color: "#e11d48", fontSize: 15, cursor: confirmDelete ? "default" : "pointer", transition: "all 0.15s", flexShrink: 0 }}>
-          🗑
-        </button>
+        <DeleteBtn onClick={() => setConfirmDelete(true)} disabled={updating || confirmDelete} />
       </div>
     </div>
   );
@@ -183,6 +197,9 @@ export default function App() {
       const idx = weekKeys.indexOf(toMondayKey(todayPST()));
       setWeekIdx(idx >= 0 ? idx : 0);
     }
+  // weekKeys is intentionally omitted — we only want to snap to today's week
+  // once when loading completes, not every time the tour list updates.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
   const activeWeek = weekKeys[weekIdx] || "";
@@ -218,11 +235,10 @@ export default function App() {
           <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'Playfair Display',serif", color: "#f1f5f9" }}>Scheduler</div>
         </div>
         <nav style={{ padding: "24px 16px", flex: 1 }}>
-          {[{ label: "Tour Schedule", icon: "📅", active: true }, { label: "AI Agent", icon: "🤖", soon: true }].map(item => (
-            <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 6, marginBottom: 4, fontSize: 14, fontWeight: 500, background: item.active ? "#1e293b" : "transparent", color: item.active ? "#f1f5f9" : "#64748b", cursor: item.soon ? "default" : "pointer" }}>
+          {[{ label: "Tour Schedule", icon: "📅", active: true }].map(item => (
+            <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 6, marginBottom: 4, fontSize: 14, fontWeight: 500, background: item.active ? "#1e293b" : "transparent", color: item.active ? "#f1f5f9" : "#64748b", cursor: "pointer" }}>
               <span style={{ fontSize: 16 }}>{item.icon}</span>
               {item.label}
-              {item.soon && <span style={{ marginLeft: "auto", fontSize: 10, color: "#475569", background: "#1e293b", padding: "2px 6px", borderRadius: 4 }}>Soon</span>}
             </div>
           ))}
           <div style={{ marginTop: 8 }}>
@@ -230,7 +246,7 @@ export default function App() {
               <span style={{ fontSize: 16 }}>{scraping ? "⏳" : "🔄"}</span>
               {scraping ? "Loading..." : "Load New Tours"}
             </button>
-            <div style={{ fontSize: 11, color: "#475569", marginTop: 6, lineHeight: 1.4 }}>⚠️ Use sparingly — high memory usage</div>
+
             {scrapeMsg && (
               <div style={{ marginTop: 8, padding: "8px 10px", borderRadius: 6, fontSize: 12, background: msgColors[scrapeMsg.type][0], color: msgColors[scrapeMsg.type][1], border: `1px solid ${msgColors[scrapeMsg.type][2]}` }}>
                 {scrapeMsg.text}
