@@ -69,7 +69,7 @@ def cancellations_api(events):
         active_guests = Guest.objects.exclude(past_event=True)
         count = 0
         for guest in active_guests:
-            if guest.event_id not in events and guest.group_tour == False:
+            if guest.event_id not in events:
 
                 #check if tour exists for this guest
                 tour = guest.tour
@@ -99,7 +99,7 @@ def cancellations_api(events):
                     week_day = start_dt_pst.strftime("%A")
                     time_str = start_dt_pst.strftime("%-I:%M %p")
                     notify_cancellation.delay(tour.event_id, guest.guest_name, time_str, tour.week_number, week_day)
-                    asyncio.run(update_sheet(start_dt, False, True))
+                    asyncio.run(update_sheet(start_dt, tour.group_tour, True))
                     count += 1
                     tour.delete()
                 else:

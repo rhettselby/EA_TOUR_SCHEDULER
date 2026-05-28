@@ -1,4 +1,4 @@
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from .models import Tour
 import pytz
 
@@ -93,4 +93,15 @@ def get_tours_api(request):
     TourScraper.delay()
 
     return Response({"message": "OASA Tour Website Scraped"})
+
+
+@api_view(['DELETE'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def delete_tour(request, tour_id):
+    tour = get_object_or_404(Tour, id=tour_id)
+    tour.delete()
+    return Response({"message": "Tour Deleted"}, status = 204)
+
+
 

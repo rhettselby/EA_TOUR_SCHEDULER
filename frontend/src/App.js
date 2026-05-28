@@ -81,8 +81,10 @@ function NavBtn({ onClick, disabled, dir }) {
   );
 }
 
-function TourCard({ tour, onStatusChange }) {
+function TourCard({ tour, onStatusChange, onDelete }) {
   const [updating, setUpdating] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const cfg = STATUS[tour.status] || STATUS.unassigned;
   const guests = Array.isArray(tour.guest_name) ? tour.guest_name : tour.guest_name ? [tour.guest_name] : ["Guest"];
 
@@ -95,9 +97,17 @@ function TourCard({ tour, onStatusChange }) {
     setUpdating(false);
   };
 
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await fetch(`/api/tours/${tour.id}/delete/`, { method: "DELETE" });
+      onDelete(tour.id);
+    } catch (e) { console.error(e); setDeleting(false); setConfirmDelete(false); }
+  };
+
   return (
     <div style={{ background: cfg.light, border: `2px solid ${cfg.border}`, borderRadius: 10, padding: "16px 20px", marginBottom: 10,
-      display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", opacity: updating ? 0.6 : 1, transition: "opacity 0.2s" }}>
+      display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", opacity: (updating || deleting) ? 0.6 : 1, transition: "opacity 0.2s" }}>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 13, color: cfg.color, fontFamily: "'DM Mono',monospace", fontWeight: 600, letterSpacing: "0.05em" }}>
           {formatTime(tour.start_dt)}
@@ -114,14 +124,41 @@ function TourCard({ tour, onStatusChange }) {
           <Badge color={cfg.color} border={cfg.border} bold>{cfg.label}</Badge>
         </div>
       </div>
-      <div style={{ display: "flex", gap: 8, marginLeft: 16, flexShrink: 0 }}>
-        {Object.entries(STATUS).map(([key, s]) => (
-          <button key={key} onClick={() => setStatus(key)} disabled={updating || tour.status === key} title={s.label}
-            style={{ width: 30, height: 30, borderRadius: "50%", outline: "none", background: s.border, transition: "all 0.15s",
-              border: tour.status === key ? "3px solid #1a202c" : `2px solid ${s.border}`,
-              opacity: tour.status === key ? 1 : 0.5, transform: tour.status === key ? "scale(1.2)" : "scale(1)",
-              cursor: tour.status === key ? "default" : "pointer" }} />
-        ))}
+
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: 16, flexShrink: 0 }}>
+        {/* Confirmation prompt */}
+        {confirmDelete && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff1f2", border: "1px solid #fecdd3", borderRadius: 8, padding: "6px 12px" }}>
+            <span style={{ fontSize: 12, color: "#9f1239", fontWeight: 500 }}>Delete this tour?</span>
+            <button onClick={handleDelete} disabled={deleting}
+              style={{ padding: "3px 10px", borderRadius: 5, border: "none", background: "#e11d48", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              {deleting ? "…" : "Yes"}
+            </button>
+            <button onClick={() => setConfirmDelete(false)} disabled={deleting}
+              style={{ padding: "3px 10px", borderRadius: 5, border: "1px solid #cbd5e0", background: "#fff", color: "#475569", fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
+              Cancel
+            </button>
+          </div>
+        )}
+
+        {/* Status dots */}
+        <div style={{ display: "flex", gap: 8 }}>
+          {Object.entries(STATUS).map(([key, s]) => (
+            <button key={key} onClick={() => setStatus(key)} disabled={updating || tour.status === key} title={s.label}
+              style={{ width: 30, height: 30, borderRadius: "50%", outline: "none", background: s.border, transition: "all 0.15s",
+                border: tour.status === key ? "3px solid #1a202c" : `2px solid ${s.border}`,
+                opacity: tour.status === key ? 1 : 0.5, transform: tour.status === key ? "scale(1.2)" : "scale(1)",
+                cursor: tour.status === key ? "default" : "pointer" }} />
+          ))}
+        </div>
+
+        {/* Delete button */}
+        <button onClick={() => setConfirmDelete(true)} disabled={updating || confirmDelete} title="Delete tour"
+          style={{ width: 30, height: 30, borderRadius: "50%", outline: "none", display: "flex", alignItems: "center", justifyContent: "center",
+            background: confirmDelete ? "#fecdd3" : "#fff", border: `2px solid ${confirmDelete ? "#fda4af" : "#e2e8f0"}`,
+            color: "#e11d48", fontSize: 15, cursor: confirmDelete ? "default" : "pointer", transition: "all 0.15s", flexShrink: 0 }}>
+          🗑
+        </button>
       </div>
     </div>
   );
@@ -155,6 +192,7 @@ export default function App() {
   const todayCount = tours.filter(t => toDateKey(t.start_dt) === todayPST()).length;
 
   const handleStatusChange = (id, status) => setTours(prev => prev.map(t => t.id === id ? { ...t, status } : t));
+  const handleDelete = (id) => setTours(prev => prev.filter(t => t.id !== id));
 
   const handleLoad = async () => {
     setScraping(true); setScrapeMsg(null);
@@ -267,7 +305,7 @@ export default function App() {
                     {formatDayHeader(dk)}
                     <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 400 }}>{dayTours.length} {dayTours.length === 1 ? "tour" : "tours"}</span>
                   </div>
-                  {dayTours.map(tour => <TourCard key={tour.id} tour={tour} onStatusChange={handleStatusChange} />)}
+                  {dayTours.map(tour => <TourCard key={tour.id} tour={tour} onStatusChange={handleStatusChange} onDelete={handleDelete} />)}
                 </div>
               );
             })
