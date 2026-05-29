@@ -16,46 +16,46 @@ slack_client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
 
 
 CHANNEL_MAP = {
-    "Monday_9": "C0A6EUB51U3",
-    "Monday_10": "C0A65SKTA95",
-    "Monday_11": "C0A70813VB3",
-    "Monday_12": "C0A70850CJD",
-    "Monday_13": "C0A6EUJNUCB",
-    "Monday_14": "C0A6HT62B37",
-    "Monday_15": "C0A6EUL0RMZ",
-    "Monday_16": "C0A6QTXUP1A",
-    "Tuesday_9": "C0A708AM3BK",
-    "Tuesday_10": "C0A7FKLUSGY",
-    "Tuesday_11": "C0A6MAF0LQ2",
-    "Tuesday_12": "C0A6EUTET51",
-    "Tuesday_13": "C0A65T2A287",
-    "Tuesday_14": "C0A7FKU5C3A",
-    "Tuesday_15": "C0A65T57G9M",
-    "Tuesday_16": "C0A6K9Q8PKQ",
-    "Wednesday_9": "C0A6EV0UARZ",
-    "Wednesday_10": "C0A7FKY91Q8",
-    "Wednesday_11": "C0A6HTP445T",
-    "Wednesday_12": "C0A65TBQTF1",
-    "Wednesday_13": "C0A6K9V61L6",
-    "Wednesday_14": "C0A708TDWMP",
-    "Wednesday_15": "C0A6MAV958S",
-    "Wednesday_16": "C0A6K9XUTNJ",
-    "Thursday_9": "C0A6HTVMQH3",
-    "Thursday_10": "C0A65TJVDM5",
-    "Thursday_11": "C0A6KA2L93Q",
-    "Thursday_12": "C0A6KA4A9FG",
-    "Thursday_13": "C0A6HU0GK29",
-    "Thursday_14": "C0A6MB509EE",
-    "Thursday_15": "C0A6F02EKBM",
-    "Thursday_16": "C0A6QUUEFRS",
-    "Friday_9": "C0A6KAAATEJ",
-    "Friday_10": "C0A6MB8D09G",
-    "Friday_11": "C0A6KABEKL6",
-    "Friday_12": "C0A65TVT31D",
-    "Friday_13": "C0A6QUYSHPE",
-    "Friday_14": "C0A7FLM7RG8",
-    "Friday_15": "C0A65TZ3ZU7",
-    "Friday_16": "C0A709DM43B",
+    "Monday_9": "C0AM295E423",
+    "Monday_10": "C0ANC0ZFZFA",
+    "Monday_11": "C0AM29D94AK",
+    "Monday_12": "C0AMWKWJPB3",
+    "Monday_13": "C0AMEA95ABF",
+    "Monday_14": "C0AMHSR6EV8",
+    "Monday_15": "C0AMMAP03M2",
+    "Monday_16": "C0AMFM88XGW",
+    "Tuesday_9": "C0AMHP0F0SW",
+    "Tuesday_10": "C0AMFN16BF0",
+    "Tuesday_11": "C0AM29XE6G7",
+    "Tuesday_12": "C0AMWLFMRMF",
+    "Tuesday_13": "C0AMHPARKBL",
+    "Tuesday_14": "C0AMBBY8K2P",
+    "Tuesday_15": "C0AM2A7RK2B",
+    "Tuesday_16": "C0AMWLRAVFT",
+    "Wednesday_9": "C0AMVQUSLQZ",
+    "Wednesday_10": "C0AMGTR96E6",
+    "Wednesday_11": "C0AMAGCQSCT",
+    "Wednesday_12": "C0AMLFQRZU4",
+    "Wednesday_13": "C0AMGTZK6UA",
+    "Wednesday_14": "C0AMESE6BEJ",
+    "Wednesday_15": "C0AMDFRC8PP",
+    "Wednesday_16": "C0AMGU86V3L",
+    "Thursday_9": "C0AMAGWRQAF",
+    "Thursday_10": "C0ANB7394KS",
+    "Thursday_11": "C0AM1FD6N23",
+    "Thursday_12": "C0AMDG7SG7P",
+    "Thursday_13": "C0AMGURQS3C",
+    "Thursday_14": "C0AMLGMQ2EQ",
+    "Thursday_15": "C0AMVS6N29F",
+    "Thursday_16": "C0ANB7M5HL0",
+    "Friday_9": "C0ANC2XNCQG",
+    "Friday_10": "C0AM2B5D3F1",
+    "Friday_11": "C0ANC31RSN4",
+    "Friday_12": "C0AMHQNAFL2",
+    "Friday_13": "C0AM2BJ5F3R",
+    "Friday_14": "C0AMECNMZ8D",
+    "Friday_15": "C0ANC3G4H4G",
+    "Friday_16": "C0AM2BR5ZRD",
 }
 
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1WE4y8-a7Zxb3dEuRp2hQ4O22JYqn9IJwFnB7Xq1ptes/edit?pli=1&gid=0#gid=0"
@@ -78,8 +78,8 @@ def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_ur
 
     try:
         text = (
-            #f"<!channel> You have an upcoming tour on {week_day} (Week {week_number}). Please bold "
-            f"@channel (no ping for testing) You have an upcoming tour on {week_day} (Week {week_number}) at {time}. Please bold "
+            f"<!channel> You have an upcoming tour on {week_day} (Week {week_number}). Please bold "
+            #f"@channel (no ping for testing) You have an upcoming tour on {week_day} (Week {week_number}) at {time}. Please bold "
             f"your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
             f"-- Rhett & Dani "
         )
@@ -105,7 +105,6 @@ def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_ur
 
 def get_channel_id(week_day:str, time: int) -> dict:
     """
-    This feature is currently under development. Return the given development channel id "C0AKSD2DQ06" for now. Ignore other comments.
     Given a day of the week(monday - friday) and a time (9am - 4pm)
     return the slack channel id corresponding to that day/time
     """
