@@ -29,9 +29,11 @@ slack_agent = Agent(
     3. Send out the proper message to the corresponding slack channel using the id that you
     previously obtained. The message is sent using the "send_slack_message" tool, and you should pass
     that tool the following arguments:
-        channel_id:str, week_day: str, week_number: int, sheet_url: str
-    which you obtain from the prompt you recieved and step 2 (sheet_url (or 0 if call fails). Make sure you send a message to the channel 
-    regardless, if you dont have any of the information just send a message without that specific information. 
+        channel_id:str, week_day: str, week_number: int, sheet_url: str, major_of_interest: str, contact_name: str, cell_number: str 
+    which you obtain from the prompt you recieved and step 2 (sheet_url (or 0 if call fails). Note that major_of_interest might be either empty
+    or misspelled, please pass the correct capitalzed spelling version of the major of interest. If major_of_interest, contact_name, or cell_number are empty/None
+    then pass in empty strings to the send_slack_message tool.
+    Make sure you send a message to the channel regardless, if you dont have any of the information just send a message without that specific information. 
 
     4. After sending the slack message, update the status of the specified tour in the django database.
     Use the tool "update_tour_status" to do this, and this tool the following arguments:

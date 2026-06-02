@@ -60,7 +60,7 @@ CHANNEL_MAP = {
 
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1WE4y8-a7Zxb3dEuRp2hQ4O22JYqn9IJwFnB7Xq1ptes/edit?pli=1&gid=0#gid=0"
 
-def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_url: str, time: str) -> dict:
+def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_url: str, time: str, major_of_interest: str, contact_name: str, cell_number: str) -> dict:
     """
     Send message to slack channel corresponding with given information to help coordinate tour"
     """
@@ -77,12 +77,26 @@ def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_ur
     #Note time should already be passed in PST string format
 
     try:
-        text = (
-            f"<!channel> You have an upcoming tour on {week_day} (Week {week_number}) at {time}. Please bold "
-            #f"@channel (no ping for testing) You have an upcoming tour on {week_day} (Week {week_number}) at {time}. Please bold "
-            f"your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
-            f"-- Rhett & Dani "
-        )
+        text = ""
+        if contact_name and cell_number and major_of_interest:
+            text = (
+                f"<!channel> You have an upcoming tour on {week_day} (Week {week_number}) at {time}. {contact_name} is interested in {major_of_interest} and can be reached at {cell_number} ."
+                f"Please bold your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
+                f"-- Rhett & Dani "
+            )
+        elif major_of_interest:
+            text = (
+                f"<!channel> You have an upcoming tour on {week_day} (Week {week_number}) at {time}. The guest is interested in {major_of_interest}."
+                f"Please bold your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
+                f"-- Rhett & Dani "
+            )
+        else:
+            text = (
+                f"<!channel> You have an upcoming tour on {week_day} (Week {week_number}) at {time}. Please bold "
+                f"your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
+                f"-- Rhett & Dani "
+            )
+
 
         slack_client.chat_postMessage(
             channel = channel_id,

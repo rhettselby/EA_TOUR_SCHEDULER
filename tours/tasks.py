@@ -260,6 +260,7 @@ def TourScraper():
 
                     # Scrape family details for non-group tours
                     resid = info[5]
+                    details = {}
                     if resid:
                         details = scrape_guest_details(driver, resid)
                         for field, value in details.items():
@@ -287,8 +288,8 @@ def TourScraper():
                     # New Tour created
                     else:
                         tour_count += 1
-                        #run_agent_celery.delay(event_id, week)
-                        #asyncio.run(update_sheet(info[0], info[3], False))
+                        run_agent_celery.delay(event_id, week, details.get('major_of_interest', ''), details.get('contact_name', ''), details.get('cell_number', ''))
+                        asyncio.run(update_sheet(info[0], info[3], False))
                         #send_text(info[0], info[3])
 
                     guest.tour = tour
@@ -309,7 +310,7 @@ def TourScraper():
             driver.quit()
 
 @shared_task
-def run_agent_celery(event_id, week):
+def run_agent_celery(event_id, week, major_of_interest, contact_name, cell_number):
     
     tour = Tour.objects.get(event_id=event_id)
     
@@ -322,7 +323,11 @@ def run_agent_celery(event_id, week):
     week_day = start_dt_pst.strftime('%A')
     
 
-    query = f"Handle this incoming tour with week_day: {week_day}, time: {time_str}, week_number: {week}, event_id: {event_id}, and status: unassigned. Delegate work to slack_agent"
+    query = f"""
+    Handle this incoming tour with week_day: {week_day}, time: {time_str}, week_number: {week}, event_id: {event_id}, and status: unassigned. 
+    The guest has the following major of interest: {major_of_interest}, contact name: {contact_name}, and cell number: {cell_number} .
+    Delegate work to slack_agent
+    """
     asyncio.run(run_agent(query, event_id))
 
 

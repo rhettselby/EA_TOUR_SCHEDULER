@@ -233,6 +233,7 @@ function TourCard({ tour, onStatusChange, onDelete, token }) {
     try {
       await fetch(`/api/tours/${tour.id}/delete/`, { method: "DELETE", headers: authHeaders(token) });
       onDelete(tour.id);
+      window.location.reload();
     } catch (e) { console.error(e); setDeleting(false); setConfirmDelete(false); }
   };
 
