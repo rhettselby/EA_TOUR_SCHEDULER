@@ -17,9 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 from .views import render_home, serve_react
+from .auth_views import login_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/auth/login/', login_view, name='login'),
     path('api/tours/', include('tours.urls')),
     path('api/agents/', include('agents.urls')),
     #catch all url, must be at bottom of paths

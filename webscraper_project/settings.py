@@ -45,9 +45,19 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'gsheets',
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     'agents',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+}
 
 CSRF_TRUSTED_ORIGINS = [
     "https://eatourscheduler-production.up.railway.app",

@@ -13,7 +13,8 @@ from rest_framework.response import Response
 from .serializers import TourSerializer
 
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
 
 from django.core.cache import cache  # django cache framwork
 
@@ -75,8 +76,8 @@ def tours_api(request):
 
 
 @api_view(['PATCH'])
-@authentication_classes([])
-@permission_classes([AllowAny])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def update_status(request, tour_id):
     tour = Tour.objects.get(id=tour_id)
     tour.status = request.data.get('status')
@@ -88,6 +89,8 @@ def update_status(request, tour_id):
 
 
 @api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_tours_api(request):
 
     TourScraper.delay()
@@ -96,8 +99,8 @@ def get_tours_api(request):
 
 
 @api_view(['DELETE'])
-@authentication_classes([])
-@permission_classes([AllowAny])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def delete_tour(request, tour_id):
     tour = get_object_or_404(Tour, id=tour_id)
     tour.delete()

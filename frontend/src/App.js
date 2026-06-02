@@ -59,6 +59,12 @@ function groupTours(tours) {
   return grouped;
 }
 
+function authHeaders(token) {
+  return token
+    ? { "Content-Type": "application/json", "Authorization": `Token ${token}` }
+    : { "Content-Type": "application/json" };
+}
+
 function Badge({ children, color = "#4a5568", border = "rgba(0,0,0,0.08)", bold = false }) {
   return (
     <span style={{ fontSize: 12, color, background: "rgba(255,255,255,0.7)", border: `1px solid ${border}`, borderRadius: 4, padding: "2px 8px", fontWeight: bold ? 600 : 400 }}>
@@ -100,17 +106,77 @@ function DeleteBtn({ onClick, disabled }) {
   );
 }
 
-function TourCard({ tour, onStatusChange, onDelete }) {
+function LoginModal({ onLogin }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Login failed");
+      } else {
+        onLogin(data.token, data.username);
+      }
+    } catch {
+      setError("Network error");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+      <div style={{ background: "#fff", borderRadius: 12, padding: "36px 40px", width: 340, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+        <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 700, color: "#0f172a", marginBottom: 4 }}>Sign In</div>
+        <div style={{ fontSize: 13, color: "#64748b", marginBottom: 24 }}>EA Tours — Director Access</div>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Username</label>
+            <input
+              type="text" value={username} onChange={e => setUsername(e.target.value)} required autoFocus
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #cbd5e0", fontSize: 14, outline: "none", boxSizing: "border-box" }}
+            />
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Password</label>
+            <input
+              type="password" value={password} onChange={e => setPassword(e.target.value)} required
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #cbd5e0", fontSize: 14, outline: "none", boxSizing: "border-box" }}
+            />
+          </div>
+          {error && <div style={{ marginBottom: 16, padding: "8px 12px", background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 6, fontSize: 13, color: "#b91c1c" }}>{error}</div>}
+          <button type="submit" disabled={loading}
+            style={{ width: "100%", padding: "11px", borderRadius: 6, border: "none", background: loading ? "#94a3b8" : "#0f172a", color: "#fff", fontSize: 14, fontWeight: 600, cursor: loading ? "default" : "pointer" }}>
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function TourCard({ tour, onStatusChange, onDelete, token }) {
   const [updating, setUpdating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const cfg = STATUS[tour.status] || STATUS.unassigned;
   const guests = Array.isArray(tour.guest_name) ? tour.guest_name : tour.guest_name ? [tour.guest_name] : ["Guest"];
+  const isAuth = !!token;
 
   const setStatus = async (newStatus) => {
     setUpdating(true);
     try {
-      await fetch(`/api/tours/${tour.id}/update_status/`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus }) });
+      await fetch(`/api/tours/${tour.id}/update_status/`, { method: "PATCH", headers: authHeaders(token), body: JSON.stringify({ status: newStatus }) });
       onStatusChange(tour.id, newStatus);
     } catch (e) { console.error(e); }
     setUpdating(false);
@@ -119,7 +185,7 @@ function TourCard({ tour, onStatusChange, onDelete }) {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await fetch(`/api/tours/${tour.id}/delete/`, { method: "DELETE" });
+      await fetch(`/api/tours/${tour.id}/delete/`, { method: "DELETE", headers: authHeaders(token) });
       onDelete(tour.id);
     } catch (e) { console.error(e); setDeleting(false); setConfirmDelete(false); }
   };
@@ -144,36 +210,35 @@ function TourCard({ tour, onStatusChange, onDelete }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: 16, flexShrink: 0 }}>
-        {/* Confirmation prompt */}
-        {confirmDelete && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff1f2", border: "1px solid #fecdd3", borderRadius: 8, padding: "6px 12px" }}>
-            <span style={{ fontSize: 12, color: "#9f1239", fontWeight: 500 }}>Delete this tour?</span>
-            <button onClick={handleDelete} disabled={deleting}
-              style={{ padding: "3px 10px", borderRadius: 5, border: "none", background: "#e11d48", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-              {deleting ? "…" : "Yes"}
-            </button>
-            <button onClick={() => setConfirmDelete(false)} disabled={deleting}
-              style={{ padding: "3px 10px", borderRadius: 5, border: "1px solid #cbd5e0", background: "#fff", color: "#475569", fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
-              Cancel
-            </button>
+      {isAuth && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: 16, flexShrink: 0 }}>
+          {confirmDelete && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff1f2", border: "1px solid #fecdd3", borderRadius: 8, padding: "6px 12px" }}>
+              <span style={{ fontSize: 12, color: "#9f1239", fontWeight: 500 }}>Delete this tour?</span>
+              <button onClick={handleDelete} disabled={deleting}
+                style={{ padding: "3px 10px", borderRadius: 5, border: "none", background: "#e11d48", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                {deleting ? "…" : "Yes"}
+              </button>
+              <button onClick={() => setConfirmDelete(false)} disabled={deleting}
+                style={{ padding: "3px 10px", borderRadius: 5, border: "1px solid #cbd5e0", background: "#fff", color: "#475569", fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
+                Cancel
+              </button>
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 8 }}>
+            {Object.entries(STATUS).map(([key, s]) => (
+              <button key={key} onClick={() => setStatus(key)} disabled={updating || tour.status === key} title={s.label}
+                style={{ width: 30, height: 30, borderRadius: "50%", outline: "none", background: s.border, transition: "all 0.15s",
+                  border: tour.status === key ? "3px solid #1a202c" : `2px solid ${s.border}`,
+                  opacity: tour.status === key ? 1 : 0.5, transform: tour.status === key ? "scale(1.2)" : "scale(1)",
+                  cursor: tour.status === key ? "default" : "pointer" }} />
+            ))}
           </div>
-        )}
 
-        {/* Status dots */}
-        <div style={{ display: "flex", gap: 8 }}>
-          {Object.entries(STATUS).map(([key, s]) => (
-            <button key={key} onClick={() => setStatus(key)} disabled={updating || tour.status === key} title={s.label}
-              style={{ width: 30, height: 30, borderRadius: "50%", outline: "none", background: s.border, transition: "all 0.15s",
-                border: tour.status === key ? "3px solid #1a202c" : `2px solid ${s.border}`,
-                opacity: tour.status === key ? 1 : 0.5, transform: tour.status === key ? "scale(1.2)" : "scale(1)",
-                cursor: tour.status === key ? "default" : "pointer" }} />
-          ))}
+          <DeleteBtn onClick={() => setConfirmDelete(true)} disabled={updating || confirmDelete} />
         </div>
-
-        {/* Delete button */}
-        <DeleteBtn onClick={() => setConfirmDelete(true)} disabled={updating || confirmDelete} />
-      </div>
+      )}
     </div>
   );
 }
@@ -184,6 +249,24 @@ export default function App() {
   const [weekIdx, setWeekIdx] = useState(0);
   const [scraping, setScraping] = useState(false);
   const [scrapeMsg, setScrapeMsg] = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem("auth_token"));
+  const [username, setUsername] = useState(() => localStorage.getItem("auth_username"));
+  const [showLogin, setShowLogin] = useState(false);
+
+  const handleLogin = (tok, user) => {
+    localStorage.setItem("auth_token", tok);
+    localStorage.setItem("auth_username", user);
+    setToken(tok);
+    setUsername(user);
+    setShowLogin(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("auth_username");
+    setToken(null);
+    setUsername(null);
+  };
 
   useEffect(() => {
     fetch("/api/tours/").then(r => r.json()).then(data => { setTours(data); setLoading(false); }).catch(() => setLoading(false));
@@ -197,8 +280,6 @@ export default function App() {
       const idx = weekKeys.indexOf(toMondayKey(todayPST()));
       setWeekIdx(idx >= 0 ? idx : 0);
     }
-  // weekKeys is intentionally omitted — we only want to snap to today's week
-  // once when loading completes, not every time the tour list updates.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
@@ -214,7 +295,7 @@ export default function App() {
   const handleLoad = async () => {
     setScraping(true); setScrapeMsg(null);
     try {
-      const res = await fetch("/api/tours/scrape/", { method: "POST" });
+      const res = await fetch("/api/tours/scrape/", { method: "POST", headers: authHeaders(token) });
       const data = await res.json();
       setScrapeMsg({ type: res.status === 429 ? "warning" : "success", text: res.status === 429 ? data.message : "Scraper triggered! New tours will appear shortly." });
     } catch { setScrapeMsg({ type: "error", text: "Failed to trigger scraper." }); }
@@ -227,6 +308,8 @@ export default function App() {
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans',sans-serif", background: "#f8fafc" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@600;700&family=DM+Mono&display=swap" rel="stylesheet" />
+
+      {showLogin && <LoginModal onLogin={handleLogin} />}
 
       {/* Sidebar */}
       <div style={{ width: 240, minWidth: 240, background: "#0f172a", color: "#e2e8f0", display: "flex", flexDirection: "column", padding: "32px 0" }}>
@@ -241,18 +324,21 @@ export default function App() {
               {item.label}
             </div>
           ))}
-          <div style={{ marginTop: 8 }}>
-            <button onClick={handleLoad} disabled={scraping} style={{ width: "100%", padding: "10px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 10, background: scraping ? "#1e293b" : "#1e3a5f", border: "1px solid #2d5a8e", color: scraping ? "#64748b" : "#93c5fd", fontSize: 14, fontWeight: 500, cursor: scraping ? "default" : "pointer" }}>
-              <span style={{ fontSize: 16 }}>{scraping ? "⏳" : "🔄"}</span>
-              {scraping ? "Loading..." : "Load New Tours"}
-            </button>
 
-            {scrapeMsg && (
-              <div style={{ marginTop: 8, padding: "8px 10px", borderRadius: 6, fontSize: 12, background: msgColors[scrapeMsg.type][0], color: msgColors[scrapeMsg.type][1], border: `1px solid ${msgColors[scrapeMsg.type][2]}` }}>
-                {scrapeMsg.text}
-              </div>
-            )}
-          </div>
+          {token && (
+            <div style={{ marginTop: 8 }}>
+              <button onClick={handleLoad} disabled={scraping} style={{ width: "100%", padding: "10px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 10, background: scraping ? "#1e293b" : "#1e3a5f", border: "1px solid #2d5a8e", color: scraping ? "#64748b" : "#93c5fd", fontSize: 14, fontWeight: 500, cursor: scraping ? "default" : "pointer" }}>
+                <span style={{ fontSize: 16 }}>{scraping ? "⏳" : "🔄"}</span>
+                {scraping ? "Loading..." : "Load New Tours"}
+              </button>
+
+              {scrapeMsg && (
+                <div style={{ marginTop: 8, padding: "8px 10px", borderRadius: 6, fontSize: 12, background: msgColors[scrapeMsg.type][0], color: msgColors[scrapeMsg.type][1], border: `1px solid ${msgColors[scrapeMsg.type][2]}` }}>
+                  {scrapeMsg.text}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
         <div style={{ padding: 24, borderTop: "1px solid #1e293b" }}>
           <div style={{ fontSize: 11, letterSpacing: "0.1em", color: "#475569", textTransform: "uppercase", marginBottom: 12 }}>Status</div>
@@ -262,6 +348,26 @@ export default function App() {
               <span style={{ fontSize: 13, color: "#94a3b8" }}>{cfg.label}</span>
             </div>
           ))}
+
+          {/* Auth section */}
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #1e293b" }}>
+            {token ? (
+              <div>
+                <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>
+                  Signed in as <span style={{ color: "#94a3b8", fontWeight: 600 }}>{username}</span>
+                </div>
+                <button onClick={handleLogout}
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #334155", background: "transparent", color: "#64748b", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setShowLogin(true)}
+                style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #334155", background: "#1e293b", color: "#93c5fd", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+                Sign In
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -321,7 +427,7 @@ export default function App() {
                     {formatDayHeader(dk)}
                     <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 400 }}>{dayTours.length} {dayTours.length === 1 ? "tour" : "tours"}</span>
                   </div>
-                  {dayTours.map(tour => <TourCard key={tour.id} tour={tour} onStatusChange={handleStatusChange} onDelete={handleDelete} />)}
+                  {dayTours.map(tour => <TourCard key={tour.id} tour={tour} onStatusChange={handleStatusChange} onDelete={handleDelete} token={token} />)}
                 </div>
               );
             })
