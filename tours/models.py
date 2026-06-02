@@ -15,6 +15,7 @@ class Tour(models.Model):
     group_tour = models.BooleanField(default=False)
     guest_name = models.JSONField(default=list, blank=True, null=True)
     week_number = models.PositiveIntegerField(null=True, blank=True)
+    ambassador = models.CharField(max_length=255, default=None)
 
     STATUS_CHOICES = [
         ('unassigned', 'Unassigned'),
