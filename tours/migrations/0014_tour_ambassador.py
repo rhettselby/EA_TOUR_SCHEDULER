@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='tour',
             name='ambassador',
-            field=models.CharField(default=None, max_length=255),
+            field=models.CharField(blank=True, default='', max_length=255),
         ),
     ]
