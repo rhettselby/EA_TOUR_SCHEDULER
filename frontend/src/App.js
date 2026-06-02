@@ -165,13 +165,59 @@ function LoginModal({ onLogin }) {
   );
 }
 
+function GuestDetailModal({ tour, onClose }) {
+  const guests = tour.guests || [];
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}
+      onClick={onClose}>
+      <div style={{ background: "#fff", borderRadius: 12, padding: "32px 36px", width: 480, maxWidth: "90vw", boxShadow: "0 20px 60px rgba(0,0,0,0.25)", maxHeight: "80vh", overflowY: "auto" }}
+        onClick={e => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: "#0f172a" }}>
+            Guest Details
+          </div>
+          <button onClick={onClose} style={{ border: "none", background: "none", fontSize: 20, cursor: "pointer", color: "#64748b" }}>✕</button>
+        </div>
+
+        {guests.length === 0 ? (
+          <div style={{ color: "#94a3b8", fontSize: 14 }}>No detail information available for this tour.</div>
+        ) : guests.map((g, i) => (
+          <div key={i} style={{ marginBottom: guests.length > 1 ? 24 : 0 }}>
+            {guests.length > 1 && (
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
+                Guest {i + 1} — {g.guest_name}
+              </div>
+            )}
+            {[
+              ["Contact Name", g.contact_name],
+              ["Group Name", g.group_name],
+              ["Cell # Day of Tour", g.cell_number],
+              ["Purpose of Visit", g.purpose_of_visit],
+              ["Major of Interest", g.major_of_interest],
+              ["Questions / Comments", g.questions_comments],
+            ].map(([label, value]) => value ? (
+              <div key={label} style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>{label}</div>
+                <div style={{ fontSize: 14, color: "#1a202c" }}>{value}</div>
+              </div>
+            ) : null)}
+            {i < guests.length - 1 && <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 16 }} />}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TourCard({ tour, onStatusChange, onDelete, token }) {
   const [updating, setUpdating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const cfg = STATUS[tour.status] || STATUS.unassigned;
   const guests = Array.isArray(tour.guest_name) ? tour.guest_name : tour.guest_name ? [tour.guest_name] : ["Guest"];
   const isAuth = !!token;
+  const hasDetails = tour.guests && tour.guests.length > 0 && tour.guests.some(g => g.contact_name || g.cell_number || g.major_of_interest);
 
   const setStatus = async (newStatus) => {
     setUpdating(true);
@@ -191,6 +237,8 @@ function TourCard({ tour, onStatusChange, onDelete, token }) {
   };
 
   return (
+    <>
+    {showDetails && <GuestDetailModal tour={tour} onClose={() => setShowDetails(false)} />}
     <div style={{ background: cfg.light, border: `2px solid ${cfg.border}`, borderRadius: 10, padding: "16px 20px", marginBottom: 10,
       display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", opacity: (updating || deleting) ? 0.6 : 1, transition: "opacity 0.2s" }}>
       <div style={{ flex: 1 }}>
@@ -207,6 +255,12 @@ function TourCard({ tour, onStatusChange, onDelete, token }) {
           {guests.length > 1 && <Badge color="#2b6cb0" border="#90cdf4">{guests.length} groups</Badge>}
           {tour.group_tour && <Badge color="#553c9a" border="#d6bcfa">Group Tour</Badge>}
           <Badge color={cfg.color} border={cfg.border} bold>{cfg.label}</Badge>
+          {hasDetails && (
+            <button onClick={() => setShowDetails(true)}
+              style={{ fontSize: 11, color: "#3b82f6", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 4, padding: "2px 8px", fontWeight: 600, cursor: "pointer" }}>
+              View Details
+            </button>
+          )}
         </div>
       </div>
 
@@ -240,6 +294,7 @@ function TourCard({ tour, onStatusChange, onDelete, token }) {
         </div>
       )}
     </div>
+    </>
   );
 }
 

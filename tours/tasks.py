@@ -123,6 +123,31 @@ def notify_cancellation(event_id, guest_name, time_str, week_number, week_day):
     asyncio.run(run_agent(query, event_id))
     
 
+def scrape_guest_details(driver, resid):
+    try:
+        url = f"https://tours.engineering.ucla.edu/Web/reservation/?rn={resid}"
+        driver.get(url)
+        WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.ID, "reservation-attributes-list"))
+        )
+        def get_val(selector, by=By.CSS_SELECTOR):
+            try:
+                return driver.find_element(by, selector).get_attribute("value") or ''
+            except:
+                return ''
+        return {
+            "contact_name": get_val("#attribute-5"),
+            "group_name": get_val("#attribute-1"),
+            "cell_number": get_val("#attribute-2"),
+            "purpose_of_visit": get_val("input[name='psiattribute[8]']"),
+            "major_of_interest": get_val("#attribute-6"),
+            "questions_comments": get_val("#attribute-7"),
+        }
+    except Exception as e:
+        print(f"Failed to scrape details for {resid}: {e}")
+        return {}
+
+
 ####Webscraper Function
 
 @shared_task
@@ -173,113 +198,115 @@ def TourScraper():
             EC.presence_of_element_located((By.CLASS_NAME, "event"))
         )
 
-
         current_week_html = driver.page_source
         print("loaded html")
+
+        soup = BeautifulSoup(current_week_html, 'lxml')
+        tours = [e for e in soup.find_all('div', class_="reserved") if 'past' not in e.get('class', [])]
+        group_tours = [e for e in soup.find_all('div', class_="unreservable") if 'past' not in e.get('class', []) and 'Group Tour' in e.get_text(strip=True)]
+        events = tours + group_tours
+
+        print("retrieved tours")
+        result = {}
+        for event in events:
+            if event.get("data-start"):
+                start_ts = int(event.get("data-start"))
+                end_ts = int(event.get("data-end"))
+                start_dt = datetime.fromtimestamp(start_ts, tz=timezone.utc)
+                end_dt = datetime.fromtimestamp(end_ts, tz=timezone.utc)
+                resid = event.get('data-resid')
+                event_id = f"{resid}_{start_ts}"
+                group_tour = 'Group Tour' in event.get_text(strip=True)
+                if group_tour:
+                    event_id = f"Group_tour_at_{start_ts}"
+                    resid = None
+                guest_name = event.get_text(strip=True)
+
+                existing = next((id for id, info in result.items() if info[0] == start_dt and info[4] == guest_name), None)
+
+                #tour already found
+                if event_id in result:
+                    result[event_id][2] += 1
+                #same time + guest name as existing tour
+                elif existing:
+                    result[existing][2] += 1
+                #found new tour
+                else:
+                    result[event_id] = [start_dt, end_dt, 1, group_tour, guest_name, resid]
+
+        guest_count = 0
+        tour_count = 0
+        quarter_start_dt = datetime.strptime(quarter_start, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+        for event_id, info in result.items():
+            try:
+                days = (info[0] - quarter_start_dt).days
+                week = days // 7 + 1
+
+                guest, created_guest = Guest.objects.get_or_create(
+                    event_id=event_id,
+                    defaults={
+                        "start_dt": info[0],
+                        "end_dt": info[1],
+                        "number_of_guests": info[2],
+                        "group_tour": info[3],
+                        "guest_name": info[4],
+                        "week_number": week,
+                        "tour": None,
+                    }
+                )
+                # New Guest Created
+                if created_guest:
+                    guest_count += 1
+
+                    # Scrape family details for non-group tours
+                    resid = info[5]
+                    if resid:
+                        details = scrape_guest_details(driver, resid)
+                        for field, value in details.items():
+                            setattr(guest, field, value)
+
+                    tour, created_tour = Tour.objects.get_or_create(
+                        start_dt=info[0],
+                        defaults={
+                            "event_id": event_id,
+                            "end_dt": info[1],
+                            "number_of_guests": info[2],
+                            "group_tour": info[3],
+                            "guest_name": [info[4]],
+                            "week_number": week,
+                        }
+                    )
+
+                    # Tour already exists, add new Guest to tour
+                    if not created_tour:
+                        if info[4] not in tour.guest_name:
+                            tour.guest_name.append(info[4])
+                        tour.number_of_guests += info[2]
+                        tour.save()
+
+                    # New Tour created
+                    else:
+                        tour_count += 1
+                        #run_agent_celery.delay(event_id, week)
+                        #asyncio.run(update_sheet(info[0], info[3], False))
+                        #send_text(info[0], info[3])
+
+                    guest.tour = tour
+                    guest.save()
+
+            except Exception as e:
+                print(f"failed to process event {event_id} ({info[4]}), error: {e}")
+
+        print(f"{guest_count} new guests, {tour_count} new tours.")
+        try:
+            cancellations_api(result.keys())
+        except Exception as e:
+            print(f"Failed to check for cancelled events: {e}")
 
     #ensure driver always quits
     finally:
         if 'driver' in locals():
             driver.quit()
-
-    soup = BeautifulSoup(current_week_html, 'lxml')
-    tours = [e for e in soup.find_all('div', class_="reserved") if 'past' not in e.get('class', [])]
-    group_tours = [e for e in soup.find_all('div', class_="unreservable") if 'past' not in e.get('class', []) and 'Group Tour' in e.get_text(strip=True)]
-    events = tours + group_tours
-
-    print("retrieved tours")
-    result = {}
-    for event in events:
-        if event.get("data-start"):
-            start_ts = int(event.get("data-start"))
-            end_ts = int(event.get("data-end"))
-            start_dt = datetime.fromtimestamp(start_ts, tz=timezone.utc)
-            end_dt = datetime.fromtimestamp(end_ts, tz=timezone.utc)
-            event_id = f"{event.get('data-resid')}_{start_ts}"
-            group_tour = 'Group Tour' in event.get_text(strip=True)
-            if group_tour:
-                event_id = f"Group_tour_at_{start_ts}"
-            guest_name = event.get_text(strip=True)
-
-            existing = next((id for id, info in result.items() if info[0] == start_dt and info[4] == guest_name), None)
-
-            #tour already found
-            if event_id in result:
-                result[event_id][2] += 1
-            #same time + guest name as existing tour
-            elif existing:
-                result[existing][2] += 1
-            #found new tour
-            else:
-                result[event_id] = [start_dt, end_dt, 1, group_tour, guest_name]
-
-    guest_count = 0
-    tour_count = 0
-    #determine week number
-    quarter_start_dt = datetime.strptime(quarter_start, '%Y-%m-%d').replace(tzinfo=timezone.utc)
-    for event_id, info in result.items():
-        try:
-            days = (info[0] - quarter_start_dt).days
-            week = days // 7 + 1
-
-            guest, created_guest = Guest.objects.get_or_create(
-                event_id=event_id,
-                defaults={
-                    "start_dt": info[0],
-                    "end_dt": info[1],
-                    "number_of_guests": info[2],
-                    "group_tour": info[3],
-                    "guest_name": info[4],
-                    "week_number": week,
-                    "tour": None,
-                }
-            )
-            # New Guest Created
-            if created_guest:
-                guest_count += 1
-                tour, created_tour = Tour.objects.get_or_create(
-                    start_dt = info[0],
-                    defaults={
-                    "event_id" : event_id,
-                    "end_dt": info[1],
-                    "number_of_guests": info[2],
-                    "group_tour": info[3],
-                    "guest_name": [info[4]],
-                    "week_number": week,
-                    }
-                )
-
-                # Tour already exists, add new Guest to tour
-                if not created_tour:
-                    #attempt to fix duplicate guests bug
-                    if info[4] not in tour.guest_name:
-                        tour.guest_name.append(info[4])
-                    tour.number_of_guests += info[2] 
-                    tour.save()
-    
-                
-                #New Tour created
-                else:
-                    tour_count += 1
-                    #call agent first, so call doesnt depend on update_sheet success
-                    run_agent_celery.delay(event_id, week)
-                    asyncio.run(update_sheet(info[0], info[3], False))
-                    #send_text(info[0], info[3])
-                
-                guest.tour = tour
-                guest.save()
-
-
-        except Exception as e:
-            print(f"failed to process event {event_id} ({info[4]}), error: {e}")
-    
-    print(f"{guest_count} new guests, {tour_count} new tours.")
-    try:
-        #check each event_id in database still on website
-        cancellations_api(result.keys())
-
-    except Exception as e:
-        print(f"Failed to check for cancelled events: {e}")
 
 @shared_task
 def run_agent_celery(event_id, week):

@@ -41,6 +41,12 @@ class Guest(models.Model):
     week_number = models.PositiveIntegerField(null=True, blank=True)
     tour = models.ForeignKey(Tour, on_delete=models.CASCADE, null=True, blank=True, default=None)
     past_event = models.BooleanField(default=False)
+    contact_name = models.CharField(max_length=255, blank=True, default='')
+    group_name = models.CharField(max_length=255, blank=True, default='')
+    cell_number = models.CharField(max_length=50, blank=True, default='')
+    purpose_of_visit = models.CharField(max_length=255, blank=True, default='')
+    major_of_interest = models.CharField(max_length=255, blank=True, default='')
+    questions_comments = models.TextField(blank=True, default='')
 
    
 
