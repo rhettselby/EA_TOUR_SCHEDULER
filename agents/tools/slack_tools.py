@@ -81,13 +81,13 @@ def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_ur
         if contact_name and cell_number and major_of_interest:
             text = (
                 f"<!channel> You have an upcoming tour on {week_day} (Week {week_number}) at {time}. {contact_name} is interested in {major_of_interest} and can be reached at {cell_number} ."
-                f"Please bold your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
+                f" Please bold your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
                 f"-- Rhett & Dani "
             )
         elif major_of_interest:
             text = (
                 f"<!channel> You have an upcoming tour on {week_day} (Week {week_number}) at {time}. The guest is interested in {major_of_interest}."
-                f"Please bold your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
+                f" Please bold your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
                 f"-- Rhett & Dani "
             )
         else:
