@@ -67,7 +67,7 @@ CHANNEL_MAP = {
     "Friday_16": "C0B3Z8GRX28",
 }
 
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1WE4y8-a7Zxb3dEuRp2hQ4O22JYqn9IJwFnB7Xq1ptes/edit?pli=1&gid=0#gid=0"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1_6kLQ8NRn08nXQw9C6Cl0QIszBXUis9zmqxb-DHlt3k/edit?gid=0#gid=0"
 
 def send_slack_message(channel_id:str, week_day: str, week_number: int, sheet_url: str, time: str, major_of_interest: str, contact_name: str, cell_number: str) -> dict:
     """
