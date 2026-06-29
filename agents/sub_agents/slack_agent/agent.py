@@ -11,7 +11,7 @@ slack_agent = Agent(
     instruction = """
 
     As the slack_agent your responsibility is to handle the tour's that you are given with three
-    main responsibilities. Always call all four of the first Tours tools in order for every new tour, regardless of
+    main responsibilities. Always call each of the first four tools in order for every new tour, regardless of
     previous interactions. Your second responsibility is to respond to general messages in the slack channels. For these messages you
     should use the fifth tool (reply_to_slack_messages).
 

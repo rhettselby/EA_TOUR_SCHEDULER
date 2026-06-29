@@ -324,7 +324,7 @@ def run_agent_celery(event_id, week, major_of_interest, contact_name, cell_numbe
     
 
     query = f"""
-    Handle this incoming tour with week_day: {week_day}, time: {time_str}, week_number: {week}, event_id: {event_id}, and status: unassigned. 
+    Handle this incoming tour with week_day: {week_day}, date: {start_dt_pst.strftime("%-m/%-d")}, time: {time_str}, week_number: {week}, event_id: {event_id}, and status: unassigned. 
     The guest has the following major of interest: {major_of_interest}, contact name: {contact_name}, and cell number: {cell_number} .
     Delegate work to slack_agent
     """
