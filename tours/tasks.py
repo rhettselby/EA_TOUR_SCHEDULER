@@ -217,10 +217,12 @@ def TourScraper():
                 resid = event.get('data-resid')
                 event_id = f"{resid}_{start_ts}"
                 group_tour = 'Group Tour' in event.get_text(strip=True)
+                guest_name = event.get_text(strip=True)
                 if group_tour:
                     event_id = f"Group_tour_at_{start_ts}"
                     resid = None
-                guest_name = event.get_text(strip=True)
+                    guest_name = 'Group Tour'
+                
 
                 existing = next((id for id, info in result.items() if info[0] == start_dt and info[4] == guest_name), None)
 
@@ -288,7 +290,8 @@ def TourScraper():
                     # New Tour created
                     else:
                         tour_count += 1
-                        run_agent_celery.delay(event_id, week, details.get('major_of_interest', ''), details.get('contact_name', ''), details.get('cell_number', ''))
+                        if not info[3]:
+                            run_agent_celery.delay(event_id, week, details.get('major_of_interest', ''), details.get('contact_name', ''), details.get('cell_number', ''))
                         asyncio.run(update_sheet(info[0], info[3], False))
                         #send_text(info[0], info[3])
 
