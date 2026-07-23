@@ -69,8 +69,14 @@ def tours_api(request):
                 tour.save(update_fields=['status'])
 
     serializer = TourSerializer(tours, many=True)
+    data = serializer.data
 
-    return Response(serializer.data)
+    # Remove guest information if not authenticated
+    if not request.user.is_authenticated:
+        for tour in data:
+            tour.pop('guests', None)
+
+    return Response(data)
 
 
 

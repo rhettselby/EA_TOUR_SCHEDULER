@@ -338,9 +338,11 @@ export default function App() {
     setUsername(null);
   };
 
+  // Send the token so signed-in users get full guest details; refetch when the
+  // token changes (login/logout) so the view swaps between full and redacted data.
   useEffect(() => {
-    fetch("/api/tours/").then(r => r.json()).then(data => { setTours(data); setLoading(false); }).catch(() => setLoading(false));
-  }, []);
+    fetch("/api/tours/", { headers: authHeaders(token) }).then(r => r.json()).then(data => { setTours(data); setLoading(false); }).catch(() => setLoading(false));
+  }, [token]);
 
   const grouped = groupTours(tours);
   const weekKeys = Object.keys(grouped).sort();
