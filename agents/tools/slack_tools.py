@@ -19,52 +19,67 @@ CHANNEL_MAP = {
     "Monday_9": "C0AKSD2DQ06",
     "Monday_10": "C0AKSD2DQ06",
     "Monday_11": "C0AKSD2DQ06",
-    "Monday_12": "C0AKSD2DQ06",
+    #
+    "Monday_12": "C0B4S8BTVT5",
     "Monday_13": "C0AKSD2DQ06",
-    "Monday_14": "C0AKSD2DQ06",
+    #2pm
+    "Monday_14": "C0B50DNJKEV",
+    #
     "Monday_15": "C0AKSD2DQ06",
     #4pm
-    "Monday_16": "C0B3Z8GRX28",
+    "Monday_16": "C0B4S8BTVT5",
 
     "Tuesday_9": "C0AKSD2DQ06",
     "Tuesday_10": "C0AKSD2DQ06",
     "Tuesday_11": "C0AKSD2DQ06",
-    "Tuesday_12": "C0AKSD2DQ06",
+    #
+    "Tuesday_12": "C0B4S8BTVT5",
     "Tuesday_13": "C0AKSD2DQ06",
-    "Tuesday_14": "C0AKSD2DQ06",
+    #2pm
+    "Tuesday_14": "C0B50DNJKEV",
+    #
     "Tuesday_15": "C0AKSD2DQ06",
     #4pm
-    "Tuesday_16": "C0B3Z8GRX28",
+    "Tuesday_16": "C0B4S8BTVT5",
 
     "Wednesday_9": "C0AKSD2DQ06",
     "Wednesday_10": "C0AKSD2DQ06",
     "Wednesday_11": "C0AKSD2DQ06",
-    "Wednesday_12": "C0AKSD2DQ06",
+    #
+    "Wednesday_12": "C0B4S8BTVT5",
     "Wednesday_13": "C0AKSD2DQ06",
-    "Wednesday_14": "C0AKSD2DQ06",
+    #2pm
+    "Wednesday_14": "C0B50DNJKEV",
+    #
     "Wednesday_15": "C0AKSD2DQ06",
     #4pm
-    "Wednesday_16": "C0B3Z8GRX28",
+    "Wednesday_16": "C0B4S8BTVT5",
 
     "Thursday_9": "C0AKSD2DQ06",
     "Thursday_10": "C0AKSD2DQ06",
     "Thursday_11": "C0AKSD2DQ06",
-    "Thursday_12": "C0AKSD2DQ06",
+    #12pm
+    "Thursday_12": "C0B4S8BTVT5",
     "Thursday_13": "C0AKSD2DQ06",
-    "Thursday_14": "C0AKSD2DQ06",
+    #2pm
+    "Thursday_14": "C0B50DNJKEV",
+    #
     "Thursday_15": "C0AKSD2DQ06",
     #4pm
-    "Thursday_16": "C0B3Z8GRX28",
+    "Thursday_16": "C0B4S8BTVT5",
 
     "Friday_9": "C0AKSD2DQ06",
     "Friday_10": "C0AKSD2DQ06",
     "Friday_11": "C0AKSD2DQ06",
-    "Friday_12": "C0AKSD2DQ06",
+    #12pm
+    "Friday_12": "C0B4S8BTVT5",
     "Friday_13": "C0AKSD2DQ06",
-    "Friday_14": "C0AKSD2DQ06",
+    #2pm
+    "Friday_14": "C0B50DNJKEV",
+    #
     "Friday_15": "C0AKSD2DQ06",
     #4pm
-    "Friday_16": "C0B3Z8GRX28",
+    "Friday_16": "C0B4S8BTVT5",
 }
 
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1_6kLQ8NRn08nXQw9C6Cl0QIszBXUis9zmqxb-DHlt3k/edit?gid=0#gid=0"
