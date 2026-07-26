@@ -220,7 +220,7 @@ def get_sheet_url(week_number: int) -> dict:
         gspread_client = gspread.authorize(creds)
 
 
-        base_url = "https://docs.google.com/spreadsheets/d/1_6kLQ8NRn08nXQw9C6Cl0QIszBXUis9zmqxb-DHlt3k/edit?gid=0#gid=0"
+        base_url = "https://docs.google.com/spreadsheets/d/10wcZlu5tP8OrMALIITzcB_tbgbLr7ZfcHc0_bxMKJs4/edit?gid=0#gid=0"
         # get worksheet gid by name
         sheet = gspread_client.open_by_key("1WE4y8-a7Zxb3dEuRp2hQ4O22JYqn9IJwFnB7Xq1ptes")
         worksheet = sheet.worksheet(f"Week {week_number}")
