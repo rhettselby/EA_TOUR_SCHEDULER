@@ -14,6 +14,7 @@ import json
 
 
 quarter_start = os.environ.get("QUARTER_START_DATE")
+google_sheet_id = os.environ.get("GOOGLE_SHEET_ID")
 from asgiref.sync import sync_to_async
 
 async def update_sheet(tour_start_dt, is_group_tour, cancellation):
@@ -31,7 +32,7 @@ async def update_sheet(tour_start_dt, is_group_tour, cancellation):
 
         client = gspread.authorize(creds)
 
-        sheet_id = "1_rOWH5jgSI15TUSmzJ4MMtnqHqG5wdu1_K7AcjYT9MM"
+        sheet_id = google_sheet_id
         sheet = client.open_by_key(sheet_id)
 
         ##### Extract week, day, hour
