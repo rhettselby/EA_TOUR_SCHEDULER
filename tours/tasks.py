@@ -292,8 +292,7 @@ def TourScraper():
                         tour_count += 1
                         if not info[3]:
                             run_agent_celery.delay(event_id, week, details.get('major_of_interest', ''), details.get('contact_name', ''), details.get('cell_number', ''))
-                        #temporarily disable updating sheet for c cesh different formatted gsheet
-                        #asyncio.run(update_sheet(info[0], info[3], False))
+                        asyncio.run(update_sheet(info[0], info[3], False))
                         #send_text(info[0], info[3])
 
                     guest.tour = tour

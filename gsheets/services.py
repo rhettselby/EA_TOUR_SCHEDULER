@@ -51,19 +51,33 @@ async def update_sheet(tour_start_dt, is_group_tour, cancellation):
         except:
             worksheet = sheet.get_worksheet(week + 1)
 
-        starting_row = 3 + (hour - 9) * 4
+        #2026 Summer Session C Version
 
-        if not 2 < starting_row < 32:
-            raise ValueError("Invalid Start Time")
+        csesh_slots = {
+            12: (15, 21),
+            14: (26, 32),
+            16: (37, 41),
+        }
+
+        if hour not in csesh_slots:
+            raise ValueError("Invalid Hour, Update CSesh Sheet failed")
+        
+        starting_row, ending_row = csesh_slots[hour]
 
         column = day + 2
-
         if not 1 < column < 7:
             raise ValueError("Invalid Day of Week")
 
         A1_top = gspread.utils.rowcol_to_a1(starting_row, column)
+        A1_bottom = gspread.utils.rowcol_to_a1(ending_row, column)
+
+        """ Standard sheet calculation
+        A1_top = gspread.utils.rowcol_to_a1(starting_row, column)
         A1_bottom = gspread.utils.rowcol_to_a1(starting_row + 3, column)
+        """
+
         A1_range = A1_top + ":" + A1_bottom
+
 
         if not cancellation:
             print("Google Sheet background updated for tour")
@@ -76,19 +90,8 @@ async def update_sheet(tour_start_dt, is_group_tour, cancellation):
         else:
             print("Google Sheet background removed for cancellation")
             worksheet.format(A1_range, {"backgroundColor": {"red": 1, "green": 1, "blue": 1}})
-            
+
+
     await sync_to_async(_update)()
-
-
-
-
-
-
-
-
-
-    
-
-
 
 
