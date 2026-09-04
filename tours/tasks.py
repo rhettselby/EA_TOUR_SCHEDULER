@@ -4,6 +4,9 @@ from datetime import datetime
 from datetime import timezone
 import time
 import os
+import shutil
+import subprocess
+import tempfile
 from bs4 import BeautifulSoup
 import pytz
 from selenium import webdriver
@@ -22,9 +25,23 @@ PASSWORD = os.environ.get('BOOKED_PASSWORD')
 #Ai Agent
 from agents.utils import run_agent
 import asyncio
-#moved chrome driver install outside of function so runs
-#once each time celery starts up, not every time it runs task
-CHROME_DRIVER_PATH = ChromeDriverManager().install()
+#In the container CHROMEDRIVER_PATH points at a driver pinned at build time to
+#the Chrome in the image (see Dockerfile), so the two can never drift apart.
+#webdriver-manager is only the local-dev fallback, and it is resolved lazily so
+#a slow or failed download cannot take down worker startup.
+_CHROME_DRIVER_PATH = None
+
+
+def get_chrome_driver_path():
+    global _CHROME_DRIVER_PATH
+    if _CHROME_DRIVER_PATH is None:
+        pinned = os.environ.get("CHROMEDRIVER_PATH")
+        if pinned and os.path.exists(pinned):
+            _CHROME_DRIVER_PATH = pinned
+        else:
+            _CHROME_DRIVER_PATH = ChromeDriverManager().install()
+    return _CHROME_DRIVER_PATH
+
 from django.utils import timezone as dj_timezone 
 
 
@@ -162,10 +179,27 @@ def TourScraper():
         options.add_argument("--disable-gpu")
         options.add_argument("--disable-extensions")
         options.add_argument("--window-size=1920,1080")
-        options.binary_location = "/usr/bin/google-chrome"
+        options.add_argument("--disable-software-rasterizer")
+        options.add_argument("--disable-crash-reporter")
+        options.binary_location = os.environ.get("CHROME_BIN", "/usr/bin/google-chrome")
+
+        #fresh profile per run: a profile left behind by a killed run makes
+        #Chrome exit during startup, and stale ones pile up in /tmp
+        profile_dir = tempfile.mkdtemp(prefix="chrome-profile-")
+        options.add_argument(f"--user-data-dir={profile_dir}")
+
+        #send the chromedriver log to the container's stdout so the reason
+        #Chrome died shows up in the logs instead of just "Chrome instance exited"
+        service_args = []
+        if os.environ.get("CHROMEDRIVER_VERBOSE", "1") != "0":
+            service_args.append("--verbose")
 
         driver = webdriver.Chrome(
-            service=Service(CHROME_DRIVER_PATH),
+            service=Service(
+                get_chrome_driver_path(),
+                service_args=service_args,
+                log_output=subprocess.STDOUT,
+            ),
             options=options
         )
         driver.set_page_load_timeout(60)
@@ -311,6 +345,8 @@ def TourScraper():
     finally:
         if 'driver' in locals():
             driver.quit()
+        if 'profile_dir' in locals():
+            shutil.rmtree(profile_dir, ignore_errors=True)
 
 @shared_task
 def run_agent_celery(event_id, week, major_of_interest, contact_name, cell_number):
