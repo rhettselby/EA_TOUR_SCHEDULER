@@ -1,5 +1,6 @@
 import os
 from slack_sdk import WebClient
+from slack_tools import get_channel_id
 
 import pytz
 #gsheets
@@ -75,8 +76,9 @@ def get_channel_id(week_day:str, time: int) -> dict:
     print(f"getting channel _id")
 
     try:
-        key = week_day + "_" + str(time)
-        channel_id = CHANNEL_MAP[key]
+        channel_id = get_channel_id(week_day, time)
+        #key = week_day + "_" + str(time)
+        #channel_id = CHANNEL_MAP[key]
         return {
             "channel_id": channel_id,
             "status": "retrieved channel id",

@@ -16,73 +16,52 @@ slack_client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
 
 
 CHANNEL_MAP = {
-    "Monday_9": "C0AKSD2DQ06",
-    "Monday_10": "C0AKSD2DQ06",
-    "Monday_11": "C0AKSD2DQ06",
-    #
-    "Monday_12": "C0B4S8BTVT5",
-    "Monday_13": "C0AKSD2DQ06",
-    #2pm
-    "Monday_14": "C0B50DNJKEV",
-    #
-    "Monday_15": "C0AKSD2DQ06",
-    #4pm
-    "Monday_16": "C0B4S8BTVT5",
+    "Monday_9": "",
+    "Monday_10": "",
+    "Monday_11": "",
+    "Monday_12": "",
+    "Monday_13": "",
+    "Monday_14": "",
+    "Monday_15": "",
+    "Monday_16": "",
 
-    "Tuesday_9": "C0AKSD2DQ06",
-    "Tuesday_10": "C0AKSD2DQ06",
-    "Tuesday_11": "C0AKSD2DQ06",
-    #
-    "Tuesday_12": "C0B4S8BTVT5",
-    "Tuesday_13": "C0AKSD2DQ06",
-    #2pm
-    "Tuesday_14": "C0B50DNJKEV",
-    #
-    "Tuesday_15": "C0AKSD2DQ06",
-    #4pm
-    "Tuesday_16": "C0B4S8BTVT5",
+    "Tuesday_9": "",
+    "Tuesday_10": "",
+    "Tuesday_11": "",
+    "Tuesday_12": "",
+    "Tuesday_13": "",
+    "Tuesday_14": "",
+    "Tuesday_15": "",
+    "Tuesday_16": "",
 
-    "Wednesday_9": "C0AKSD2DQ06",
-    "Wednesday_10": "C0AKSD2DQ06",
-    "Wednesday_11": "C0AKSD2DQ06",
-    #
-    "Wednesday_12": "C0B4S8BTVT5",
-    "Wednesday_13": "C0AKSD2DQ06",
-    #2pm
-    "Wednesday_14": "C0B50DNJKEV",
-    #
-    "Wednesday_15": "C0AKSD2DQ06",
-    #4pm
-    "Wednesday_16": "C0B4S8BTVT5",
+    "Wednesday_9": "",
+    "Wednesday_10": "",
+    "Wednesday_11": "",
+    "Wednesday_12": "",
+    "Wednesday_13": "",
+    "Wednesday_14": "",
+    "Wednesday_15": "",
+    "Wednesday_16": "",
 
-    "Thursday_9": "C0AKSD2DQ06",
-    "Thursday_10": "C0AKSD2DQ06",
-    "Thursday_11": "C0AKSD2DQ06",
-    #12pm
-    "Thursday_12": "C0B4S8BTVT5",
-    "Thursday_13": "C0AKSD2DQ06",
-    #2pm
-    "Thursday_14": "C0B50DNJKEV",
-    #
-    "Thursday_15": "C0AKSD2DQ06",
-    #4pm
-    "Thursday_16": "C0B4S8BTVT5",
+    "Thursday_9": "",
+    "Thursday_10": "",
+    "Thursday_11": "",
+    "Thursday_12": "",
+    "Thursday_13": "",
+    "Thursday_14": "",
+    "Thursday_15": "",
+    "Thursday_16": "",
 
-    "Friday_9": "C0AKSD2DQ06",
-    "Friday_10": "C0AKSD2DQ06",
-    "Friday_11": "C0AKSD2DQ06",
-    #12pm
-    "Friday_12": "C0B4S8BTVT5",
-    "Friday_13": "C0AKSD2DQ06",
-    #2pm
-    "Friday_14": "C0B50DNJKEV",
-    #
-    "Friday_15": "C0AKSD2DQ06",
-    #4pm
-    "Friday_16": "C0B4S8BTVT5",
+    "Friday_9": "",
+    "Friday_10": "",
+    "Friday_11": "",
+    "Friday_12": "",
+    "Friday_13": "",
+    "Friday_14": "",
+    "Friday_15": "",
+    "Friday_16": "",
 }
 
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1_6kLQ8NRn08nXQw9C6Cl0QIszBXUis9zmqxb-DHlt3k/edit?gid=0#gid=0"
 
 def send_slack_message(channel_id:str, week_day: str, week_number: int, date: str, sheet_url: str, time: str, major_of_interest: str, contact_name: str, cell_number: str) -> dict:
     """
@@ -201,31 +180,27 @@ def update_tour_status(event_id: str, status: str) -> dict:
         }
 
 
+
+SHEET_URL = f"https://docs.google.com/spreadsheets/d/{os.environ.get('GOOGLE_SHEET_ID', '')}/edit"
+
+
 def get_sheet_url(week_number: int) -> dict:
     """
-    given a week number, extract the corresponding url for that week's google sheet page
+    Given a week number, extract the corresponding url for that week's google sheet page
     """
-
     print("Getting sheet url")
-
+    base_url = SHEET_URL
     try:
-
-        scopes = [
-            "https://www.googleapis.com/auth/spreadsheets"
-        ]
-
+        scopes = ["https://www.googleapis.com/auth/spreadsheets"]
         creds_json = os.environ.get("GSHEETS_CREDENTIALS_JSON")
         creds_dict = json.loads(creds_json)
         creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
         gspread_client = gspread.authorize(creds)
 
-
-        base_url = "https://docs.google.com/spreadsheets/d/10wcZlu5tP8OrMALIITzcB_tbgbLr7ZfcHc0_bxMKJs4/edit?gid=0#gid=0"
         # get worksheet gid by name
-        sheet = gspread_client.open_by_key("1WE4y8-a7Zxb3dEuRp2hQ4O22JYqn9IJwFnB7Xq1ptes")
+        sheet = gspread_client.open_by_key(os.environ.get("GOOGLE_SHEET_ID"))
         worksheet = sheet.worksheet(f"Week {week_number}")
-        gid = worksheet.id
-        sheet_url = f"{base_url}#gid={gid}"
+        sheet_url = f"{base_url}#gid={worksheet.id}"
 
         return {
             "sheet_url" : sheet_url,
