@@ -1,6 +1,6 @@
 import os
 from slack_sdk import WebClient
-from slack_tools import get_channel_id
+from agents.tools.slack_tools import get_channel_id
 
 import pytz
 #gsheets
