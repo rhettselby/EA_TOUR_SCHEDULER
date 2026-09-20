@@ -51,31 +51,20 @@ async def update_sheet(tour_start_dt, is_group_tour, cancellation):
         except:
             worksheet = sheet.get_worksheet(week + 1)
 
-        #2026 Summer Session C Version
+        #Standard quarter sheet layout: one 4-row block per hour, 9am - 4pm.
+        #Summer Session C used a different, hand-built sheet (3 slots at
+        #irregular row offsets); Fall 26 is back on the standard template.
+        starting_row = 3 + (hour - 9) * 4
 
-        csesh_slots = {
-            12: (15, 21),
-            14: (26, 32),
-            16: (37, 41),
-        }
-
-        if hour not in csesh_slots:
-            raise ValueError("Invalid Hour, Update CSesh Sheet failed")
-        
-        starting_row, ending_row = csesh_slots[hour]
+        if not 2 < starting_row < 32:
+            raise ValueError("Invalid Start Time")
 
         column = day + 2
         if not 1 < column < 7:
             raise ValueError("Invalid Day of Week")
 
         A1_top = gspread.utils.rowcol_to_a1(starting_row, column)
-        A1_bottom = gspread.utils.rowcol_to_a1(ending_row, column)
-
-        """ Standard sheet calculation
-        A1_top = gspread.utils.rowcol_to_a1(starting_row, column)
         A1_bottom = gspread.utils.rowcol_to_a1(starting_row + 3, column)
-        """
-
         A1_range = A1_top + ":" + A1_bottom
 
 

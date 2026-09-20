@@ -1,36 +1,17 @@
 import os
 from slack_sdk import WebClient
-from agents.tools.slack_tools import get_channel_id
+
+#Re-exported so the cancellation_agent keeps importing get_channel_id from this
+#module. Defining a wrapper here shadowed the import and recursed into itself,
+#so every cancellation silently fell through to FALLBACK_CHANNEL_ID instead of
+#using CHANNEL_MAP.
+from agents.tools.slack_tools import get_channel_id, FALLBACK_CHANNEL_ID
 
 import pytz
 #gsheets
 
 
-CANCELLATION_CHANNEL_ID = "C0AKSD2DQ06"
-
-
-
-
-def get_channel_id(week_day:str, time: int) -> dict:
-    """
-    Given a day of the week(monday - friday) and a time (9am - 4pm)
-    return the slack channel id corresponding to that day/time
-    """
-    print(f"getting channel _id")
-
-    try:
-        #call function from slack tools
-        channel_id = get_channel_id(week_day, time)
-        return {
-            "channel_id": channel_id,
-            "status": "retrieved channel id",
-        }
-    
-    except Exception as e:
-       return {
-           "channel_id": "C0AKSD2DQ06",
-            "status": f"Unable to retrive channel id, error : {str(e)}",
-            }
+CANCELLATION_CHANNEL_ID = FALLBACK_CHANNEL_ID
 
 slack_client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
 

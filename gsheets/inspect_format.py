@@ -23,7 +23,7 @@ def update_sheet():
 
     client = gspread.authorize(creds)
 
-    sheet_id = "1WE4y8-a7Zxb3dEuRp2hQ4O22JYqn9IJwFnB7Xq1ptes"
+    sheet_id = os.environ.get("GOOGLE_SHEET_ID")
 
     sheet = client.open_by_key(sheet_id)
 

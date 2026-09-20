@@ -15,6 +15,12 @@ import json
 slack_client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
 
 
+#Where messages go when CHANNEL_MAP has no entry for a day/time. Update this at
+#the start of each quarter along with CHANNEL_MAP - it is still the Summer 2026
+#general tours channel.
+FALLBACK_CHANNEL_ID = os.environ.get("SLACK_FALLBACK_CHANNEL_ID", "C0AKSD2DQ06")
+
+
 CHANNEL_MAP = {
     "Monday_9": "C0C251KG00L",
     "Monday_10": "C0C1V4XQWEP",
@@ -137,7 +143,7 @@ def get_channel_id(week_day:str, time: int) -> dict:
     
     except Exception as e:
        return {
-           "channel_id": "C0AKSD2DQ06",
+           "channel_id": FALLBACK_CHANNEL_ID,
             "status": "Unable to retrive channel id",
             }
     
