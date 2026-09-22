@@ -26,7 +26,7 @@ def slack_cancellation(channel_id: str, time:str, guest_name:str, week_number:in
 
         return {
             "status": "Message sent to slack channel",
-            "channel_id": CANCELLATION_CHANNEL_ID,
+            "channel_id": channel_id,
             "message": text,
         }
     except Exception as e:

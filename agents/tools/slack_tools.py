@@ -15,9 +15,9 @@ import json
 slack_client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
 
 
-#Where messages go when CHANNEL_MAP has no entry for a day/time. Update this at
-#the start of each quarter along with CHANNEL_MAP - it is still the Summer 2026
-#general tours channel.
+#Where messages go when CHANNEL_MAP has no entry for a day/time, and where
+#cancellation notices go. This is the general tours channel, which carries over
+#between quarters, so it does not change with CHANNEL_MAP.
 FALLBACK_CHANNEL_ID = os.environ.get("SLACK_FALLBACK_CHANNEL_ID", "C0AKSD2DQ06")
 
 
