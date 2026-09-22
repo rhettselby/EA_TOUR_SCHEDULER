@@ -47,9 +47,21 @@ async def update_sheet(tour_start_dt, is_group_tour, cancellation):
         ##### Update corresponding cells
         worksheet = None
         try:
+            #find worksheet by name
             worksheet = sheet.worksheet(f"Week {week + 1}")
         except:
-            worksheet = sheet.get_worksheet(week + 1)
+            try:
+                #create new sheet from Master Sheet (index 0) template
+                template = sheet.get_worksheet(0)
+                worksheet = sheet.duplicate_sheet(
+                        source_sheet_id=template.id,
+                        new_sheet_name=f"Week {week + 1}",
+                        insert_sheet_index=len(sheet.worksheets()),
+                )
+            except:
+                print("Failed to create new sheet for missing week")
+                #finds worksheet by index
+                worksheet = sheet.get_worksheet(week + 1)
 
         #Standard quarter sheet layout: one 4-row block per hour, 9am - 4pm.
         #Summer Session C used a different, hand-built sheet (3 slots at
