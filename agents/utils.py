@@ -33,6 +33,8 @@ async def call_agent_async(runner, user_id, session_id, query):
     
     except Exception as e:
         print(f"Agent Error: {e}")
+        #re-raise so run_agent_celery can retry transient LLM errors
+        raise
 
 
 

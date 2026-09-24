@@ -22,6 +22,15 @@ from .models import Guest, Tour
 from gsheets.services import update_sheet
 USERNAME = os.environ.get('BOOKED_USERNAME')
 PASSWORD = os.environ.get('BOOKED_PASSWORD')
+import litellm
+
+TRANSIENT_LLM_ERRORS = (
+    litellm.InternalServerError,      # 500s, including 529 "overloaded"
+    litellm.ServiceUnavailableError,  # 503
+    litellm.RateLimitError,           # 429
+    litellm.Timeout,
+    litellm.APIConnectionError,
+)
 #Ai Agent
 from agents.utils import run_agent
 import asyncio
@@ -351,26 +360,41 @@ def TourScraper():
         if 'profile_dir' in locals():
             shutil.rmtree(profile_dir, ignore_errors=True)
 
-@shared_task
+@shared_task(
+    autoretry_for=TRANSIENT_LLM_ERRORS,
+    retry_backoff=30,
+    retry_backoff_max=600,
+    retry_jitter=True,
+    max_retries=5,
+)
 def run_agent_celery(event_id, week, major_of_interest, contact_name, cell_number):
-    
-    tour = Tour.objects.get(event_id=event_id)
-    
-    #convert to PST
-    pst = ZoneInfo("America/Los_Angeles")
-    start_dt_pst = tour.start_dt.astimezone(pst)
-    time_str = start_dt_pst.strftime("%-I:%M %p")
 
-    #extract day + hour
-    week_day = start_dt_pst.strftime('%A')
+    try:
     
+        tour = Tour.objects.get(event_id=event_id)
+        if tour.status != "unassigned":
+            return
+        
+        #convert to PST
+        pst = ZoneInfo("America/Los_Angeles")
+        start_dt_pst = tour.start_dt.astimezone(pst)
+        time_str = start_dt_pst.strftime("%-I:%M %p")
 
-    query = f"""
-    Handle this incoming tour with week_day: {week_day}, date: {start_dt_pst.strftime("%-m/%-d")}, time: {time_str}, week_number: {week}, event_id: {event_id}, and status: unassigned. 
-    The guest has the following major of interest: {major_of_interest}, contact name: {contact_name}, and cell number: {cell_number} .
-    Delegate work to slack_agent
-    """
-    asyncio.run(run_agent(query, event_id))
+        #extract day + hour
+        week_day = start_dt_pst.strftime('%A')
+        
+
+        query = f"""
+        Handle this incoming tour with week_day: {week_day}, date: {start_dt_pst.strftime("%-m/%-d")}, time: {time_str}, week_number: {week}, event_id: {event_id}, and status: unassigned. 
+        The guest has the following major of interest: {major_of_interest}, contact name: {contact_name}, and cell number: {cell_number} .
+        Delegate work to slack_agent
+        """
+
+        asyncio.run(run_agent(query, event_id))
+    
+    except Exception as e:
+        print(f"Error during run_agent_celery task: {str(e)}")
+        raise
 
 
 
