@@ -17,7 +17,7 @@ def get_history(days_back: int) -> dict:
         #Create two week zone starting at beginning of current week
         today = timezone.now().astimezone(pst)
         start_range = today - timedelta(days=days_back)
-        tours = Tour.objects.filter(start_dt__ge=start_range)
+        tours = Tour.objects.filter(start_dt__gte=start_range)
         result = []
         for tour in tours:
             result.append({
