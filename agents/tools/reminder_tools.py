@@ -1,4 +1,5 @@
 from datetime import timedelta
+import concurrent
 from django.utils import timezone
 
 import pytz
@@ -18,16 +19,23 @@ def get_history(days_back: int) -> dict:
         today = timezone.now().astimezone(pst)
         start_range = today - timedelta(days=days_back)
         tours = Tour.objects.filter(start_dt__gte=start_range)
+
         result = []
-        for tour in tours:
-            result.append({
-                "event_id": tour.event_id,
-                "start": tour.start_dt.astimezone(pst).strftime("%a %b %d, %I:%M %p"),
-                "number_of_guests": tour.number_of_guests,
-                "group_tour": tour.group_tour,
-                "guest_name": tour.guest_name,
-                "status": tour.status,
-            })
+
+        #must create new thread when performing sync operations inside async process (agent calls asyncio.run())
+        def db_ops():
+            for tour in tours:
+                result.append({
+                    "event_id": tour.event_id,
+                    "start": tour.start_dt.astimezone(pst).strftime("%a %b %d, %I:%M %p"),
+                    "number_of_guests": tour.number_of_guests,
+                    "group_tour": tour.group_tour,
+                    "guest_name": tour.guest_name,
+                    "status": tour.status,
+                })
+        
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            pool.submit(db_ops).result()
         
         return {
             'tours': result,
