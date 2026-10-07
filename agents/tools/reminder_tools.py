@@ -1,7 +1,6 @@
 from datetime import timedelta
 import concurrent
 from django.utils import timezone
-
 import pytz
 from tours.models import Tour
 

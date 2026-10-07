@@ -1,5 +1,6 @@
 import json
 from django.http import HttpResponse, JsonResponse
+from django.core.cache import cache
 from tours.models import Tour, Guest
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
@@ -25,10 +26,12 @@ def slack_events(request):
         # Step 2: Ignore bot messages to prevent infinite loop
         event = data.get('event', {})
         if event.get('bot_id'):
-            return JsonResponse({"error": "avoing response to slack bots message"}, status = 405)
+            return JsonResponse({"error": "avoing response to slack bots message"}, status = 200)
 
         # Step 3: Only handle actual messages
         if event.get('type') == 'message':
+            if not cache.add(f"slack_event:{data.get('event_id')}", True, timeout=60 * 60):
+                return JsonResponse({"message": "duplicate event"}, status=200)
             channel = event.get('channel')
             text = event.get('text')
             ts = event.get('ts')
