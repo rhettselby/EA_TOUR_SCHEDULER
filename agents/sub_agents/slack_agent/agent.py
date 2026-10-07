@@ -1,5 +1,6 @@
 from google.adk.agents.llm_agent import Agent
 from agents.tools.slack_tools import reply_to_slack_message, send_slack_message, get_channel_id, update_tour_status, get_sheet_url
+from agents.tools.reminder_tools import get_history
 from google.adk.models.lite_llm import LiteLlm
 
 slack_agent = Agent(
@@ -13,7 +14,7 @@ slack_agent = Agent(
     As the slack_agent your responsibility is to handle the tour's that you are given with three
     main responsibilities. Always call each of the first four tools in order for every new tour, regardless of
     previous interactions. Your second responsibility is to respond to general messages in the slack channels. For these messages you
-    should use the fifth tool (reply_to_slack_messages).
+    should use the fifth and sixth tools (reply_to_slack_messages + get_history).
 
     1. Obtain the slack channel id for the corresponding slack channel, given a tour's
     day of the week (Monday-Friday) and its time(9am - 4pm) that you extract from the query.
@@ -46,8 +47,11 @@ slack_agent = Agent(
     5. (FOR GENERAL REPLIES ONLY) To reply to general messages in slack, you should receive the channel id from the promopt, and use that channel
     id in your call to reply_to_slack_message in order to send a message in that channel. Please respond to each message in a professional tone, 
     as the goal is still to coordinate tours. 
+
+    6. If you need tour history, call the 'get_history' tool with a single parameter (days_back: int) that retrieves information from all tours given in the 
+    last days_back days. 
     """,
 
 
-    tools=[send_slack_message, get_channel_id, update_tour_status, get_sheet_url, reply_to_slack_message],
+    tools=[send_slack_message, get_channel_id, update_tour_status, get_sheet_url, reply_to_slack_message, get_history],
 )
