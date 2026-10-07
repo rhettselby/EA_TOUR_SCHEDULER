@@ -8,7 +8,7 @@ from tours.models import Tour
 def get_history(days_back: int) -> dict:
     """
     Use this when someone asks about recent tours, this tool provides information on tours given in the 
-    last 2 weeks.
+    last 'days_back' days.
     """
     print(f"Retrieving tour history")
 
@@ -18,7 +18,7 @@ def get_history(days_back: int) -> dict:
         #Create two week zone starting at beginning of current week
         today = timezone.now().astimezone(pst)
         start_range = today - timedelta(days=days_back)
-        tours = Tour.objects.filter(start_dt__gte=start_range)
+        tours = Tour.objects.filter(start_dt__gte=start_range).order_by('start_dt')
 
         result = []
 
