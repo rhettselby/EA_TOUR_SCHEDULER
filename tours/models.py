@@ -49,6 +49,33 @@ class Guest(models.Model):
     major_of_interest = models.CharField(max_length=255, blank=True, default='')
     questions_comments = models.TextField(blank=True, default='')
 
+
+class TourSignup(models.Model):
+    """
+    One ambassador's answer to a tour's Slack sign-up message. This table is the
+    source of truth for who signed up: the Slack message is rebuilt from it on
+    every click, so two people clicking at the same time can't overwrite each other.
+    """
+    RESPONSE_CHOICES = [
+        ('yes', 'Can take it'),
+        ('no', "Can't take it"),
+    ]
+
+    tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name='signups')
+    slack_user_id = models.CharField(max_length=50)
+    slack_name = models.CharField(max_length=255)
+    response = models.CharField(max_length=3, choices=RESPONSE_CHOICES)
+    responded_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['tour', 'slack_user_id'], name='unique_signup_per_user'),
+        ]
+        ordering = ['responded_at']
+
+    def __str__(self):
+        return f"{self.slack_name} ({self.response}) for {self.tour.event_id}"
+
    
 
 

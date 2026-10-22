@@ -4,7 +4,8 @@ from . import views
 app_name = 'agents'
 
 urlpatterns = [
-    path('slack_events/', views.slack_events, name = "slack_events")
+    path('slack_events/', views.slack_events, name = "slack_events"),
+    path('slack_interactions/', views.slack_interactions, name = "slack_interactions"),
 ]
 
 
