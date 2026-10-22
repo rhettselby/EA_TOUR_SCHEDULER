@@ -4,7 +4,7 @@ from agents.tools.cancellation_tools import get_channel_id, slack_cancellation
 from google.adk.models.lite_llm import LiteLlm
 
 cancellation_agent = Agent(
-    model=LiteLlm(model="claude-sonnet-5-5"),
+    model=LiteLlm(model="claude-haiku-5-5"),
     name='cancellation_agent',
     description="Handles tour cancellations by sending cancellation notification to the appropriate slack channel",
     instruction="""You handle tour cancellations. Your job is to take the event_id you have been given, obtain the 
