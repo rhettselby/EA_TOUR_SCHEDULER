@@ -156,9 +156,9 @@ def get_slack_name(user: dict) -> str:
 
 def send_slack_message(channel_id:str, event_id: str, week_day: str, week_number: int, date: str, sheet_url: str, time: str, major_of_interest: str, contact_name: str, cell_number: str) -> dict:
     """
-    Send message to slack channel corresponding with given information to help coordinate tour.
-    The message has "Yes, I can take it" / "No, I can't" buttons tied to the tour's event_id.
+    Send message to slack channel corresponding with given information to help coordinate tour"
     """
+    #event_id is only used by the sign-up buttons, which are turned off for now
 
     #debug print statements
     print(f"Attempting to send message to channel {channel_id}")
@@ -176,26 +176,32 @@ def send_slack_message(channel_id:str, event_id: str, week_day: str, week_number
         if contact_name and cell_number and major_of_interest:
             text = (
                 f"<!channel> You have an upcoming tour on {week_day} ({date}) at {time}. {contact_name} is interested in {major_of_interest} and can be reached at {cell_number} ."
-                f" Please tap a button below to let us know if you can take it (schedule <{sheet_url}|here>). Thanks! \n\n" 
+                f" Please bold your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
+                # f" Please tap a button below to let us know if you can take it (schedule <{sheet_url}|here>). Thanks! \n\n"
                 f"-- Rhett & Dani "
             )
         elif major_of_interest:
             text = (
                 f"<!channel> You have an upcoming tour on {week_day} ({date}) at {time}. The guest is interested in {major_of_interest}."
-                f" Please tap a button below to let us know if you can take it (schedule <{sheet_url}|here>). Thanks! \n\n" 
+                f" Please bold your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
+                # f" Please tap a button below to let us know if you can take it (schedule <{sheet_url}|here>). Thanks! \n\n"
                 f"-- Rhett & Dani "
             )
         else:
             text = (
-                f"<!channel> You have an upcoming tour on {week_day} ({date}) at {time}. Please tap a button below to let us know if you can take it (schedule <{sheet_url}|here>). Thanks! \n\n" 
+                f"<!channel> You have an upcoming tour on {week_day} ({date}) at {time}. Please bold "
+                f"your name <{sheet_url}|here> if you can take it or react with a ❌ if you can not. Thanks! \n\n" 
+                # f"<!channel> You have an upcoming tour on {week_day} ({date}) at {time}. Please tap a button below to let us know if you can take it (schedule <{sheet_url}|here>). Thanks! \n\n"
                 f"-- Rhett & Dani "
             )
 
 
+        #Sign-up buttons are turned off for now. To bring them back, uncomment `blocks`
+        #below and swap the "tap a button" lines above in for the "bold your name" ones.
         slack_client.chat_postMessage(
             channel = channel_id,
             text = text,
-            blocks = build_tour_signup_blocks(text, event_id),
+            # blocks = build_tour_signup_blocks(text, event_id),
         )
 
         return {
